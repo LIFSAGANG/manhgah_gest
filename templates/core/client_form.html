@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2 class="h4 mb-1">{{ title }}</h2>
+          <p class="text-muted mb-0">Renseignez les informations du client.</p>
+        </div>
+        <div class="standalone-tools">
+          <a href="{% url 'client_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
+        </div>
+      </div>
+
+      <div class="form-shell">
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Nom</label>
+              {{ form.nom }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Code</label>
+              {{ form.code }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              {{ form.email }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Téléphone</label>
+              {{ form.telephone }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Adresse</label>
+              {{ form.adresse }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Ville</label>
+              {{ form.ville }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Pays</label>
+              {{ form.pays }}
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                {{ form.actif }}
+                <label class="form-check-label">Actif</label>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+            <a href="{% url 'client_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

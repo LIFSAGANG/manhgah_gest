@@ -1,0 +1,32 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2>{{ module }}</h2>
+      <p class="text-muted">{{ description }}</p>
+      <div class="alert alert-info">Ces pages sont prêtes à être développées. Vous pouvez commencer par ajouter les formulaires et les modèles spécifiques à ce module.</div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h5>Statistiques rapides</h5>
+        <ul class="list-unstyled mt-3">
+          <li><strong>{{ stats.societes }}</strong> sociétés enregistrées</li>
+          <li><strong>{{ stats.produits }}</strong> produits en catalogue</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h5>Actions rapides</h5>
+        <p>Utilisez les modules suivants pour avancer :</p>
+        <ul>
+          <li><a href="{% url 'societe_list' %}">Sociétés</a></li>
+          <li><a href="{% url 'produit_list' %}">Produits</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}

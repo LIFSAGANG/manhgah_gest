@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2>Écritures Comptables</h2>
+          <p class="text-muted mb-0">Enregistrements comptables</p>
+        </div>
+        <div class="standalone-tools">
+          <a href="{% url 'ecriture_create' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-primary">Ajouter une écriture</a>
+          <a href="{% url 'comptabilite_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Retour</a>
+        </div>
+      </div>
+
+      <div class="standalone-table-card">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Journal</th>
+                <th>Référence</th>
+                <th>Date</th>
+                <th>Intitulé</th>
+                <th>Débit</th>
+                <th>Crédit</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ecriture in ecritures %}
+                <tr>
+                  <td>{{ ecriture.journal.nom }}</td>
+                  <td>{{ ecriture.reference }}</td>
+                  <td>{{ ecriture.date_ecriture|date:'d/m/Y' }}</td>
+                  <td>{{ ecriture.intitule }}</td>
+                  <td>{{ ecriture.debit }}</td>
+                  <td>{{ ecriture.credit }}</td>
+                  <td class="text-end">
+                    <a href="{% url 'ecriture_update' ecriture.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+                    <a href="{% url 'ecriture_delete' ecriture.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="7" class="empty-state">Aucune écriture enregistrée.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="confirm-shell">
+      <h2 class="h5 mb-3">Supprimer la facture</h2>
+      <p>Voulez-vous vraiment supprimer la facture <strong>{{ facture.reference }}</strong> ?</p>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Confirmer la suppression</button>
+        <a href="{% url 'facture_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
+      </form>
+    </div>
+  </div>
+{% endblock %}

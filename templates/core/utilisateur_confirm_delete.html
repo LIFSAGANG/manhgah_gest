@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="container mt-4">
+    <div class="alert alert-warning" role="alert">
+      <h4>Confirmer la suppression</h4>
+      <p>Êtes-vous sûr de vouloir supprimer ce profil utilisateur : <strong>{{ utilisateur.user.get_full_name|default:utilisateur.user.username }}</strong> ?</p>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Supprimer</button>
+      <a href="{% url 'utilisateur_list' %}" class="btn btn-outline-secondary">Annuler</a>
+    </form>
+  </div>
+{% endblock %}

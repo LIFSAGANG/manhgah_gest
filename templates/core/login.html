@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Connexion</h5>
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-danger">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label">Nom d'utilisateur</label>
+              <input name="username" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mot de passe</label>
+              <input name="password" type="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

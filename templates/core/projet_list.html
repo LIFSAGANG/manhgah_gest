@@ -1,0 +1,47 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2>Projets</h2>
+      <p class="text-muted mb-0">Liste des projets en cours</p>
+    </div>
+    <a href="{% url 'projet_create' %}" class="btn btn-primary">Ajouter un projet</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Société</th>
+          <th>Code</th>
+          <th>Nom</th>
+          <th>Agence</th>
+          <th>Budget</th>
+          <th>Actif</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for projet in projets %}
+          <tr>
+            <td>{{ projet.societe.nom }}</td>
+            <td>{{ projet.code }}</td>
+            <td>{{ projet.nom }}</td>
+            <td>{{ projet.agence.nom }}</td>
+            <td>{{ projet.budget }}</td>
+            <td>{% if projet.actif %}Oui{% else %}Non{% endif %}</td>
+            <td class="text-end">
+              <a href="{% url 'projet_update' projet.pk %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+              <a href="{% url 'projet_delete' projet.pk %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" class="text-center">Aucun projet enregistré.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
++

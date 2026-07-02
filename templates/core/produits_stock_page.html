@@ -1,0 +1,303 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Produits et Stock | Manhgah-Gest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+      .ps-shell,
+      .ps-shell * {
+        font-family: "Manrope", "Segoe UI", sans-serif;
+      }
+
+      .ps-shell {
+        min-height: calc(100vh - 44px);
+        height: calc(100vh - 44px);
+        padding: 0;
+        background:
+          radial-gradient(circle at 12% 15%, rgba(59, 130, 246, 0.24), transparent 42%),
+          radial-gradient(circle at 88% 80%, rgba(20, 184, 166, 0.2), transparent 46%),
+          linear-gradient(140deg, #0f172a 0%, #1e3a5f 45%, #16243d 100%);
+      }
+
+      .ps-panel {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        min-height: calc(100vh - 44px);
+        border-radius: 0;
+        background: rgba(255, 255, 255, 0.08);
+        border: none;
+        box-shadow: none;
+        backdrop-filter: blur(7px);
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .ps-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .ps-title {
+        color: #f8fafc;
+        margin: 0;
+        font-size: clamp(1.8rem, 3.8vw, 3.2rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .ps-close {
+        border: 0;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #0f172a;
+        padding: 10px 14px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .ps-close:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+
+      .ps-menu-bar {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .ps-menu {
+        position: relative;
+      }
+
+      .ps-menu-btn {
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #dbeafe;
+        background: rgba(15, 23, 42, 0.25);
+        border-radius: 10px;
+        padding: 11px 16px;
+        font-weight: 800;
+        transition: all 0.2s ease;
+      }
+
+      .ps-menu-btn:hover,
+      .ps-menu-btn.active {
+        border-color: #2dd4bf;
+        color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.25);
+      }
+
+      .ps-menu-btn i {
+        margin-left: 8px;
+        font-size: 0.85rem;
+      }
+
+      .ps-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        width: min(340px, calc(100vw - 40px));
+        background: #273449;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 20px 30px rgba(2, 6, 23, 0.45);
+        padding: 8px;
+        z-index: 20;
+      }
+
+      .ps-dropdown a {
+        display: block;
+        color: #ecf3ff;
+        text-decoration: none;
+        font-weight: 700;
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+
+      .ps-dropdown a:hover {
+        background: rgba(255, 255, 255, 0.13);
+        color: #ffffff;
+      }
+
+      .ps-content {
+        border-radius: 16px;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef3ff 100%);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        padding: 18px;
+        min-height: 600px;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .ps-placeholder {
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #334155;
+        font-weight: 700;
+      }
+
+      @media (max-width: 992px) {
+        .ps-dropdown {
+          width: min(320px, calc(100vw - 30px));
+        }
+      }
+
+      @media (max-width: 700px) {
+        .ps-shell {
+          padding: 10px;
+        }
+
+        .ps-panel {
+          min-height: calc(100vh - 20px);
+          padding: 14px;
+          border-radius: 16px;
+        }
+
+        .ps-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .ps-menu-bar {
+          width: 100%;
+        }
+
+        .ps-menu {
+          width: 100%;
+        }
+
+        .ps-menu-btn {
+          width: 100%;
+          text-align: left;
+        }
+
+        .ps-dropdown {
+          position: static;
+          width: 100%;
+          margin-top: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar bg-lightblue py-2" style="background:#bfe9ff;">
+      <div class="d-flex align-items-center justify-content-between px-3">
+        <div class="logo fw-bold" style="color:#0b5d7a; font-size:1.1rem;">Manhgah-Gest</div>
+        <div>
+          {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Déconnexion</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="ps-shell" style="height: calc(100vh - 44px); top: 44px;">
+      <section class="ps-panel">
+        <header class="ps-header" style="justify-content: flex-start; gap: 12px; flex-wrap: wrap;">
+          <nav class="ps-menu-bar" aria-label="Navigation Produits et Stock" style="flex:1; margin:0;">
+
+          <a href="{% url 'accueil' %}" class="ps-menu-btn" style="text-decoration:none;">
+            <i class="fa-solid fa-house me-2"></i>Accueil
+          </a>
+
+          {% if '__all__' in user_perms or 'produit_voir' in user_perms %}
+          <div class="ps-menu">
+            <button class="ps-menu-btn" type="button" data-menu-toggle="produits-menu" aria-expanded="false">
+              <i class="fa-solid fa-boxes-stacked me-2"></i>Produits<i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <div class="ps-dropdown d-none" id="produits-menu" role="menu">
+              <a href="#" data-frame-src="{% url 'produit_list' %}?standalone=1" role="menuitem">Liste Produits</a>
+              <a href="#" data-frame-src="{% url 'categorie_list' %}?standalone=1" role="menuitem">Categories</a>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if '__all__' in user_perms or 'stock_voir' in user_perms %}
+          <div class="ps-menu">
+            <button class="ps-menu-btn" type="button" data-menu-toggle="etats-menu" aria-expanded="false">
+              <i class="fa-solid fa-chart-bar me-2"></i>Etats<i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <div class="ps-dropdown d-none" id="etats-menu" role="menu">
+              {% if '__all__' in user_perms or 'mouvement_ajouter' in user_perms %}<a href="#" data-frame-src="{% url 'mouvement_list' %}?standalone=1" role="menuitem">Mouvements de stock</a>{% endif %}
+              <a href="#" data-frame-src="{% url 'etat_stock_page' %}?standalone=1" role="menuitem">Etat du stock</a>
+              {% if '__all__' in user_perms or 'inventaire_voir' in user_perms %}<a href="#" data-frame-src="{% url 'inventaire_stock_page' %}?standalone=1" role="menuitem">Inventaire de stock</a>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+        </nav>
+        </header>
+
+        <main class="ps-content" style="padding:0; overflow:hidden; flex:1;">
+          <iframe id="ps-frame" src="{% url 'etat_stock_page' %}?standalone=1" style="display:block; width:100%; height:100%; min-height:600px; border:none; border-radius:0;"></iframe>
+        </main>
+      </section>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const menuButtons = document.querySelectorAll('[data-menu-toggle]');
+        const dropdowns = document.querySelectorAll('.ps-dropdown');
+        const frame = document.getElementById('ps-frame');
+
+        function closeAllMenus() {
+          dropdowns.forEach(function (menu) { menu.classList.add('d-none'); });
+          menuButtons.forEach(function (button) {
+            button.classList.remove('active');
+            button.setAttribute('aria-expanded', 'false');
+          });
+        }
+
+        menuButtons.forEach(function (button) {
+          button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const menuId = button.dataset.menuToggle;
+            const menu = document.getElementById(menuId);
+            const isClosed = menu.classList.contains('d-none');
+            closeAllMenus();
+            if (isClosed) {
+              menu.classList.remove('d-none');
+              button.classList.add('active');
+              button.setAttribute('aria-expanded', 'true');
+            }
+          });
+        });
+
+        document.querySelectorAll('[data-frame-src]').forEach(function (link) {
+          link.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const src = link.getAttribute('data-frame-src');
+            frame.src = src;
+            document.querySelectorAll('[data-frame-src]').forEach(function (l) { l.classList.remove('active-item'); });
+            link.classList.add('active-item');
+            closeAllMenus();
+          });
+        });
+
+        dropdowns.forEach(function (menu) {
+          menu.addEventListener('click', function (event) { event.stopPropagation(); });
+        });
+
+        document.addEventListener('click', function () { closeAllMenus(); });
+      });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

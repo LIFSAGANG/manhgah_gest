@@ -1,0 +1,83 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2>Agences</h2>
+      {% if selected_societe %}
+        <p class="text-muted mb-0">Agents de la société : <strong>{{ selected_societe.nom }}</strong></p>
+      {% else %}
+        <p class="text-muted mb-0">Liste des agences et points de vente</p>
+      {% endif %}
+    </div>
+    <a href="{% url 'agence_create' %}" class="btn btn-primary">Ajouter une agence</a>
+  </div>
+
+  <form method="get" class="row g-2 align-items-end mb-3">
+    {% if selected_societe %}
+      <input type="hidden" name="societe" value="{{ selected_societe.pk }}">
+    {% endif %}
+    <div class="col-md-6">
+      <label for="q" class="form-label">Recherche</label>
+      <input id="q" name="q" class="form-control" placeholder="Nom, code, responsable, email, téléphone" value="{{ q }}">
+    </div>
+    <div class="col-md-4">
+      <label for="ville" class="form-label">Ville</label>
+      <select id="ville" name="ville" class="form-select">
+        <option value="">Toutes les villes</option>
+        {% for ville_item in villes %}
+          <option value="{{ ville_item }}" {% if ville_item == selected_ville %}selected{% endif %}>{{ ville_item }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button type="submit" class="btn btn-outline-primary">Filtrer</button>
+    </div>
+  </form>
+
+  <div class="mb-2 text-muted small">
+    {{ agences|length }} agence(s) trouvée(s)
+    {% if q or selected_ville %}
+      - <a href="{% if selected_societe %}?societe={{ selected_societe.pk }}{% else %}{% url 'agence_list' %}{% endif %}">Réinitialiser</a>
+    {% endif %}
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Société</th>
+          <th>Nom</th>
+          <th>Code</th>
+          <th>Type</th>
+          <th>Ville</th>
+          <th>Téléphone</th>
+          <th>Email</th>
+          <th>Actif</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for agence in agences %}
+          <tr>
+            <td>{{ agence.societe.nom }}</td>
+            <td>{{ agence.nom }}</td>
+            <td>{{ agence.code }}</td>
+            <td>{{ agence.type_agence }}</td>
+            <td>{{ agence.ville }}</td>
+            <td>{{ agence.telephone }}</td>
+            <td>{{ agence.email }}</td>
+            <td>{% if agence.actif %}Oui{% else %}Non{% endif %}</td>
+            <td class="text-end">
+              <a href="{% url 'agence_update' agence.pk %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+              <a href="{% url 'agence_delete' agence.pk %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="9" class="text-center">Aucune agence enregistrée.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

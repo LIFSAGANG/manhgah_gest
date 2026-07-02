@@ -1,0 +1,16 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="row modules-row text-center mb-4">
+    <div class="col-12">
+      <div class="d-flex flex-wrap justify-content-center gap-4">
+        {% for module in modules %}
+          <a href="{% url module.link %}" class="module-card module-link">
+            <div class="module-icon {{ module.color_class }}"><i class="fa-solid {{ module.icon }}"></i></div>
+            <h5>{{ module.title }}</h5>
+            <p class="small text-muted">{{ module.subtitle }}</p>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

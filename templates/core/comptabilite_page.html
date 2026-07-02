@@ -1,0 +1,207 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Comptabilite | Manhgah-Gest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+      .comp-shell {
+        min-height: calc(100vh - 44px);
+        height: calc(100vh - 44px);
+        padding: 0;
+        background:
+          radial-gradient(circle at 12% 15%, rgba(124, 58, 237, 0.24), transparent 42%),
+          radial-gradient(circle at 88% 80%, rgba(59, 130, 246, 0.2), transparent 46%),
+          linear-gradient(140deg, #1b1234 0%, #2c2550 45%, #1d2441 100%);
+      }
+      .comp-panel {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        min-height: calc(100vh - 44px);
+        border-radius: 0;
+        background: rgba(255, 255, 255, 0.08);
+        border: none;
+        box-shadow: none;
+        backdrop-filter: blur(7px);
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .comp-head { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+      .comp-title { color: #f8fafc; margin: 0; font-size: clamp(1.8rem, 3.8vw, 3.2rem); font-weight: 800; display: none; }
+      .comp-close { border: 0; border-radius: 12px; background: #f8fafc; color: #0f172a; padding: 10px 14px; text-decoration: none; font-weight: 700; }
+      .comp-menu-bar { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+      .comp-menu { position: relative; }
+      .comp-menu-btn {
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #ede9fe;
+        background: rgba(30, 27, 75, 0.35);
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-weight: 800;
+        transition: all 0.2s ease;
+      }
+      .comp-menu-btn:hover,
+      .comp-menu-btn.active {
+        border-color: #22d3ee;
+        color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.22);
+      }
+      .comp-menu-btn i.menu-arrow { margin-left: 8px; font-size: 0.85rem; }
+      .comp-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        width: min(360px, calc(100vw - 40px));
+        background: #31274f;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 20px 30px rgba(2, 6, 23, 0.45);
+        padding: 8px;
+        z-index: 20;
+      }
+      .comp-dropdown a {
+        display: block;
+        color: #f3e8ff;
+        text-decoration: none;
+        font-weight: 700;
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+      .comp-dropdown a:hover { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+      .comp-content { border-radius: 16px; background: linear-gradient(180deg, #fbf9ff 0%, #f3efff 100%); border: 1px solid rgba(167, 139, 250, 0.25); padding: 0; overflow: hidden; flex: 1; min-height: 600px; }
+      .comp-placeholder { min-height: 220px; display: flex; align-items: center; justify-content: center; text-align: center; color: #334155; font-weight: 700; }
+      .d-none { display: none !important; }
+      @media (max-width: 992px) {
+        .comp-dropdown { width: min(320px, calc(100vw - 30px)); }
+      }
+      @media (max-width: 700px) {
+        .comp-shell { padding: 10px; }
+        .comp-panel { min-height: calc(100vh - 20px); padding: 14px; border-radius: 16px; }
+        .comp-head { flex-direction: column; align-items: flex-start; }
+        .comp-menu-bar { width: 100%; }
+        .comp-menu { width: 100%; }
+        .comp-menu-btn { width: 100%; text-align: left; }
+        .comp-dropdown { position: static; width: 100%; margin-top: 8px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar py-2" style="background:#bfe9ff;">
+      <div class="d-flex align-items-center justify-content-between px-3">
+        <div class="fw-bold" style="color:#0b5d7a; font-size:1.1rem;">Manhgah-Gest</div>
+        <div>
+          {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Déconnexion</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="comp-shell" style="height: calc(100vh - 44px);">
+      <section class="comp-panel">
+        <header class="comp-head">
+          <h1 class="comp-title">Comptabilite</h1>
+          <a href="{% url 'accueil' %}" class="comp-close">
+            <i class="fa-solid fa-xmark me-2"></i>Fermer
+          </a>
+        </header>
+
+        <nav class="comp-menu-bar" aria-label="Navigation Comptabilite">
+          {% if '__all__' in user_perms or 'plan_comptable_voir' in user_perms or 'journal_voir' in user_perms %}
+          <div class="comp-menu">
+            <button class="comp-menu-btn" type="button" data-menu-toggle="structures-menu" aria-expanded="false">
+              <i class="fa-solid fa-sitemap me-2"></i>Structures<i class="fa-solid fa-chevron-down menu-arrow"></i>
+            </button>
+            <div class="comp-dropdown d-none" id="structures-menu" role="menu">
+              {% if '__all__' in user_perms or 'plan_comptable_voir' in user_perms %}<a href="#" data-frame-src="{% url 'plan_comptable_page' %}?standalone=1" role="menuitem">Plan comptable</a>{% endif %}
+              {% if '__all__' in user_perms or 'journal_voir' in user_perms %}<a href="#" data-frame-src="{% url 'code_journaux_page' %}?standalone=1" role="menuitem">Code journaux</a>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if '__all__' in user_perms or 'rapport_comptable_voir' in user_perms or 'ecriture_voir' in user_perms %}
+          <div class="comp-menu">
+            <button class="comp-menu-btn" type="button" data-menu-toggle="etats-menu" aria-expanded="false">
+              <i class="fa-solid fa-chart-simple me-2"></i>Etats<i class="fa-solid fa-chevron-down menu-arrow"></i>
+            </button>
+            <div class="comp-dropdown d-none" id="etats-menu" role="menu">
+              {% if '__all__' in user_perms or 'ecriture_voir' in user_perms %}<a href="#" data-frame-src="{% url 'brouillard_page' %}?standalone=1" role="menuitem">Brouillard</a>{% endif %}
+              {% if '__all__' in user_perms or 'journal_voir' in user_perms %}<a href="#" data-frame-src="{% url 'etat_journaux_page' %}?standalone=1" role="menuitem">Journaux</a>{% endif %}
+              {% if '__all__' in user_perms or 'rapport_comptable_voir' in user_perms %}
+              <a href="#" data-frame-src="{% url 'balance_comptes_page' %}?standalone=1" role="menuitem">Balances des comptes</a>
+              <a href="#" data-frame-src="{% url 'grand_livre_page' %}?standalone=1" role="menuitem">Grand livres</a>
+              <a href="#" data-frame-src="{% url 'etats_tiers_page' %}?standalone=1" role="menuitem">ETATS Tiers</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        </nav>
+
+        <main class="comp-content" style="padding:0; overflow:hidden;">
+          <div class="comp-placeholder" id="comp-placeholder">
+            Clique sur Structures ou Etats pour ouvrir le menu deroulant.
+          </div>
+          <iframe id="comp-frame" src="" style="display:none; width:100%; height:100%; border:none; border-radius:0;"></iframe>
+        </main>
+      </section>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const menuButtons = document.querySelectorAll('[data-menu-toggle]');
+        const dropdowns = document.querySelectorAll('.comp-dropdown');
+        const frame = document.getElementById('comp-frame');
+        const placeholder = document.getElementById('comp-placeholder');
+
+        function closeAllMenus() {
+          dropdowns.forEach(function (menu) { menu.classList.add('d-none'); });
+          menuButtons.forEach(function (button) {
+            button.classList.remove('active');
+            button.setAttribute('aria-expanded', 'false');
+          });
+        }
+
+        menuButtons.forEach(function (button) {
+          button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const menuId = button.dataset.menuToggle;
+            const menu = document.getElementById(menuId);
+            const isClosed = menu.classList.contains('d-none');
+            closeAllMenus();
+            if (isClosed) {
+              menu.classList.remove('d-none');
+              button.classList.add('active');
+              button.setAttribute('aria-expanded', 'true');
+            }
+          });
+        });
+
+        document.querySelectorAll('[data-frame-src]').forEach(function (link) {
+          link.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const src = link.getAttribute('data-frame-src');
+            frame.src = src;
+            frame.style.display = 'block';
+            placeholder.style.display = 'none';
+            closeAllMenus();
+          });
+        });
+
+        dropdowns.forEach(function (menu) {
+          menu.addEventListener('click', function (event) { event.stopPropagation(); });
+        });
+
+        document.addEventListener('click', function () { closeAllMenus(); });
+      });
+    </script>
+  </body>
+</html>

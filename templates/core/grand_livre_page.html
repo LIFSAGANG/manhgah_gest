@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2>Grand livres</h2>
+          <p class="text-muted mb-0">Detail des ecritures par compte</p>
+        </div>
+        <div class="standalone-tools">
+          <a href="{% url 'comptabilite_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary">Retour</a>
+        </div>
+      </div>
+
+      <div class="standalone-table-card">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Compte</th>
+                <th>Date</th>
+                <th>Reference</th>
+                <th>Intitule</th>
+                <th class="text-end">Debit</th>
+                <th class="text-end">Credit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ligne in lignes %}
+                <tr>
+                  <td>{{ ligne.compte }}</td>
+                  <td>{{ ligne.date_ecriture|date:'d/m/Y' }}</td>
+                  <td>{{ ligne.reference }}</td>
+                  <td>{{ ligne.intitule }}</td>
+                  <td class="text-end">{{ ligne.debit|floatformat:2 }}</td>
+                  <td class="text-end">{{ ligne.credit|floatformat:2 }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="empty-state">Aucune ecriture disponible.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

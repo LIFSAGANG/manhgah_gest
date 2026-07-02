@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2>Dépenses</h2>
+      <p class="text-muted mb-0">Suivi des dépenses par projet et agence</p>
+    </div>
+    <a href="{% url 'depense_create' %}" class="btn btn-primary">Ajouter une dépense</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Description</th>
+          <th>Montant</th>
+          <th>Date</th>
+          <th>Type</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for depense in depenses %}
+          <tr>
+            <td>{{ depense.reference }}</td>
+            <td>{{ depense.description|truncatewords:5 }}</td>
+            <td>{{ depense.montant }} DA</td>
+            <td>{{ depense.date_depense|date:'d/m/Y' }}</td>
+            <td>{{ depense.type_depense }}</td>
+            <td class="text-end">
+              <a href="{% url 'depense_update' depense.pk %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+              <a href="{% url 'depense_delete' depense.pk %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="text-center">Aucune dépense enregistrée.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
