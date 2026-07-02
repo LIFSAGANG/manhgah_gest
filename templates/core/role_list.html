@@ -5,7 +5,7 @@
       <h2><i class="fas fa-shield-alt"></i> Rôles</h2>
       <p class="text-muted mb-0">Gestion des rôles utilisateur et leurs permissions</p>
     </div>
-    <a href="{% url 'role_create' %}" class="btn btn-primary">
+    <a href="{% url 'role_create' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-primary">
       <i class="fas fa-plus"></i> Ajouter un rôle
     </a>
   </div>
@@ -40,15 +40,15 @@
             <td>{{ role.description|truncatewords:3 }}</td>
             <td>
               <div class="d-flex gap-2 flex-wrap">
-                <a href="{% url 'role_update' role.pk %}" 
+                <a href="{% url 'role_update' role.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" 
                    class="btn btn-sm btn-outline-primary">
                   <i class="fas fa-edit"></i> Modifier
                 </a>
-                <a href="{% url 'role_permissions' role.pk %}" 
+                <a href="{% url 'role_permissions' role.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" 
                    class="btn btn-sm btn-outline-info">
                   <i class="fas fa-lock-open"></i> Permissions
                 </a>
-                <a href="{% url 'role_delete' role.pk %}" 
+                <a href="{% url 'role_delete' role.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" 
                    class="btn btn-sm btn-outline-danger">
                   <i class="fas fa-trash"></i> Supprimer
                 </a>

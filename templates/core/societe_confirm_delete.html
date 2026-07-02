@@ -9,7 +9,7 @@
           <form method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger">Confirmer la suppression</button>
-            <a href="{% url 'societe_list' %}" class="btn btn-secondary ms-2">Annuler</a>
+            <a href="{% url 'societe_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
           </form>
         </div>
       </div>
