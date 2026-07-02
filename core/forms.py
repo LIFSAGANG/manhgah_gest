@@ -43,15 +43,23 @@ class ProduitForm(forms.ModelForm):
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['nom', 'code', 'email', 'telephone', 'adresse', 'ville', 'pays', 'actif']
+        fields = ['societe', 'code_client', 'type_client', 'raison_sociale', 'nom', 'prenom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'pays', 'numero_fiscal', 'condition_paiement', 'limite_credit', 'actif']
         widgets = {
+            'societe': forms.Select(attrs={'class': 'form-select'}),
+            'code_client': forms.TextInput(attrs={'class': 'form-control'}),
+            'type_client': forms.Select(attrs={'class': 'form-select'}),
+            'raison_sociale': forms.TextInput(attrs={'class': 'form-control'}),
             'nom': forms.TextInput(attrs={'class': 'form-control'}),
-            'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'prenom': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control'}),
             'adresse': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'ville': forms.TextInput(attrs={'class': 'form-control'}),
+            'code_postal': forms.TextInput(attrs={'class': 'form-control'}),
             'pays': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero_fiscal': forms.TextInput(attrs={'class': 'form-control'}),
+            'condition_paiement': forms.TextInput(attrs={'class': 'form-control'}),
+            'limite_credit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -112,16 +120,19 @@ class ProjetForm(forms.ModelForm):
 class FournisseurForm(forms.ModelForm):
     class Meta:
         model = Fournisseur
-        fields = ['societe', 'code', 'nom', 'email', 'telephone', 'adresse', 'ville', 'pays', 'actif']
+        fields = ['societe', 'code_fournisseur', 'raison_sociale', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'pays', 'numero_fiscal', 'condition_paiement', 'actif']
         widgets = {
             'societe': forms.Select(attrs={'class': 'form-select'}),
-            'code': forms.TextInput(attrs={'class': 'form-control'}),
-            'nom': forms.TextInput(attrs={'class': 'form-control'}),
+            'code_fournisseur': forms.TextInput(attrs={'class': 'form-control'}),
+            'raison_sociale': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control'}),
             'adresse': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'ville': forms.TextInput(attrs={'class': 'form-control'}),
+            'code_postal': forms.TextInput(attrs={'class': 'form-control'}),
             'pays': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero_fiscal': forms.TextInput(attrs={'class': 'form-control'}),
+            'condition_paiement': forms.TextInput(attrs={'class': 'form-control'}),
             'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 

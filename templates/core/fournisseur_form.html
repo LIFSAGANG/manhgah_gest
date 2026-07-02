@@ -6,15 +6,22 @@
       {% csrf_token %}
       <div class="card">
         <div class="card-body">
-          {% for field in form %}
-            <div class="mb-3">
-              {{ field.label_tag }}
-              {{ field }}
-              {% if field.errors %}
-                <div class="invalid-feedback d-block">{{ field.errors }}</div>
-              {% endif %}
+          <div class="row g-3">
+            <div class="col-md-6">{{ form.societe.label_tag }} {{ form.societe }}</div>
+            <div class="col-md-6">{{ form.code_fournisseur.label_tag }} {{ form.code_fournisseur }}</div>
+            <div class="col-md-6">{{ form.raison_sociale.label_tag }} {{ form.raison_sociale }}</div>
+            <div class="col-md-6">{{ form.email.label_tag }} {{ form.email }}</div>
+            <div class="col-md-6">{{ form.telephone.label_tag }} {{ form.telephone }}</div>
+            <div class="col-md-6">{{ form.adresse.label_tag }} {{ form.adresse }}</div>
+            <div class="col-md-6">{{ form.ville.label_tag }} {{ form.ville }}</div>
+            <div class="col-md-6">{{ form.code_postal.label_tag }} {{ form.code_postal }}</div>
+            <div class="col-md-6">{{ form.pays.label_tag }} {{ form.pays }}</div>
+            <div class="col-md-6">{{ form.numero_fiscal.label_tag }} {{ form.numero_fiscal }}</div>
+            <div class="col-md-6">{{ form.condition_paiement.label_tag }} {{ form.condition_paiement }}</div>
+            <div class="col-12">
+              <div class="form-check">{{ form.actif }} <label class="form-check-label">Actif</label></div>
             </div>
-          {% endfor %}
+          </div>
         </div>
       </div>
       <div class="mt-3">

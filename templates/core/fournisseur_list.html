@@ -14,7 +14,7 @@
         <tr>
           <th>Société</th>
           <th>Code</th>
-          <th>Nom</th>
+          <th>Raison sociale</th>
           <th>Email</th>
           <th>Téléphone</th>
           <th>Ville</th>
@@ -25,9 +25,9 @@
       <tbody>
         {% for fournisseur in fournisseurs %}
           <tr>
-            <td>{{ fournisseur.societe.nom }}</td>
-            <td>{{ fournisseur.code }}</td>
-            <td>{{ fournisseur.nom }}</td>
+            <td>{{ fournisseur.societe.raison_sociale|default:'-' }}</td>
+            <td>{{ fournisseur.code_fournisseur|default:fournisseur.code }}</td>
+            <td>{{ fournisseur.raison_sociale }}</td>
             <td>{{ fournisseur.email }}</td>
             <td>{{ fournisseur.telephone }}</td>
             <td>{{ fournisseur.ville }}</td>

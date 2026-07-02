@@ -17,12 +17,28 @@
           {% csrf_token %}
           <div class="row g-3">
             <div class="col-md-6">
+              <label class="form-label">Société</label>
+              {{ form.societe }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Code client</label>
+              {{ form.code_client }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Type client</label>
+              {{ form.type_client }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Raison sociale</label>
+              {{ form.raison_sociale }}
+            </div>
+            <div class="col-md-6">
               <label class="form-label">Nom</label>
               {{ form.nom }}
             </div>
             <div class="col-md-6">
-              <label class="form-label">Code</label>
-              {{ form.code }}
+              <label class="form-label">Prénom</label>
+              {{ form.prenom }}
             </div>
             <div class="col-md-6">
               <label class="form-label">Email</label>
@@ -41,8 +57,24 @@
               {{ form.ville }}
             </div>
             <div class="col-md-6">
+              <label class="form-label">Code postal</label>
+              {{ form.code_postal }}
+            </div>
+            <div class="col-md-6">
               <label class="form-label">Pays</label>
               {{ form.pays }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Numéro fiscal</label>
+              {{ form.numero_fiscal }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Condition de paiement</label>
+              {{ form.condition_paiement }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Limite de crédit</label>
+              {{ form.limite_credit }}
             </div>
             <div class="col-12">
               <div class="form-check">

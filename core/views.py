@@ -290,7 +290,7 @@ def societe_delete(request, pk):
 
 @permission_required('client_voir')
 def client_list(request):
-    clients = Client.objects.all()
+    clients = Client.objects.select_related('societe').all()
     return render(request, 'core/client_list.html', {'clients': clients})
 
 

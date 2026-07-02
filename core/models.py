@@ -54,24 +54,54 @@ class Produit(models.Model):
 
 
 class Client(models.Model):
-    nom = models.CharField(max_length=200, verbose_name='Nom')
-    code = models.CharField(max_length=50, unique=True, verbose_name='Code client')
+    societe = models.ForeignKey(Societe, on_delete=models.CASCADE, related_name='clients', verbose_name='Société', null=True, blank=True)
+    code = models.CharField(max_length=50, unique=True, verbose_name='Code client', blank=True)
+    code_client = models.CharField(max_length=50, unique=True, verbose_name='Code client', blank=True, null=True)
+    type_client = models.CharField(
+        max_length=20,
+        choices=[('Particulier', 'Particulier'), ('Entreprise', 'Entreprise')],
+        default='Particulier',
+        verbose_name='Type client',
+    )
+    raison_sociale = models.CharField(max_length=200, blank=True, null=True, verbose_name='Raison sociale')
+    nom = models.CharField(max_length=100, blank=True, null=True, verbose_name='Nom')
+    prenom = models.CharField(max_length=100, blank=True, null=True, verbose_name='Prénom')
     email = models.EmailField(blank=True, null=True, verbose_name='Email')
-    telephone = models.CharField(max_length=40, blank=True, null=True, verbose_name='Téléphone')
+    telephone = models.CharField(max_length=20, blank=True, null=True, verbose_name='Téléphone')
     adresse = models.TextField(blank=True, null=True, verbose_name='Adresse')
     ville = models.CharField(max_length=100, blank=True, null=True, verbose_name='Ville')
+    code_postal = models.CharField(max_length=20, blank=True, null=True, verbose_name='Code postal')
     pays = models.CharField(max_length=100, blank=True, null=True, verbose_name='Pays')
-    actif = models.BooleanField(default=True, verbose_name='Actif')
+    numero_fiscal = models.CharField(max_length=50, blank=True, null=True, verbose_name='Numéro fiscal')
+    condition_paiement = models.CharField(max_length=50, blank=True, null=True, verbose_name='Condition de paiement')
+    limite_credit = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Limite de crédit')
+    actif = models.BooleanField(default=True, verbose_name='Actif', db_index=True)
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name='Date création')
+    date_modification = models.DateTimeField(auto_now=True, verbose_name='Date modification')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Créé le')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Modifié le')
 
     class Meta:
         verbose_name = 'Client'
         verbose_name_plural = 'Clients'
-        ordering = ['nom']
+        ordering = ['raison_sociale', 'nom', 'prenom']
+        indexes = [
+            models.Index(fields=['societe', 'actif']),
+            models.Index(fields=['code_client']),
+            models.Index(fields=['raison_sociale']),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.code_client and not self.code:
+            self.code = self.code_client
+        elif self.code and not self.code_client:
+            self.code_client = self.code
+        if self.raison_sociale and not self.nom:
+            self.nom = self.raison_sociale
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.nom} ({self.code})"
+        return f"{self.raison_sociale or self.nom or self.prenom or 'Client'} ({self.code_client or self.code})"
 
 
 class Facture(models.Model):
@@ -260,24 +290,46 @@ class Categorie(models.Model):
 
 
 class Fournisseur(models.Model):
-    societe = models.ForeignKey(Societe, on_delete=models.CASCADE, verbose_name='Société')
-    code = models.CharField(max_length=50, unique=True, verbose_name='Code fournisseur')
-    nom = models.CharField(max_length=200, verbose_name='Nom fournisseur')
+    societe = models.ForeignKey(Societe, on_delete=models.CASCADE, related_name='fournisseurs', verbose_name='Société', null=True, blank=True)
+    code = models.CharField(max_length=50, unique=True, verbose_name='Code fournisseur', blank=True)
+    code_fournisseur = models.CharField(max_length=50, unique=True, verbose_name='Code fournisseur', blank=True, null=True)
+    raison_sociale = models.CharField(max_length=200, verbose_name='Raison sociale')
     email = models.EmailField(blank=True, null=True, verbose_name='Email')
-    telephone = models.CharField(max_length=40, blank=True, null=True, verbose_name='Téléphone')
+    telephone = models.CharField(max_length=20, blank=True, null=True, verbose_name='Téléphone')
     adresse = models.TextField(blank=True, null=True, verbose_name='Adresse')
     ville = models.CharField(max_length=100, blank=True, null=True, verbose_name='Ville')
+    code_postal = models.CharField(max_length=20, blank=True, null=True, verbose_name='Code postal')
     pays = models.CharField(max_length=100, blank=True, null=True, verbose_name='Pays')
-    actif = models.BooleanField(default=True, verbose_name='Actif')
+    numero_fiscal = models.CharField(max_length=50, blank=True, null=True, verbose_name='Numéro fiscal')
+    condition_paiement = models.CharField(max_length=50, blank=True, null=True, verbose_name='Condition de paiement')
+    actif = models.BooleanField(default=True, verbose_name='Actif', db_index=True)
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name='Date création')
+    date_modification = models.DateTimeField(auto_now=True, verbose_name='Date modification')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Créé le')
 
     class Meta:
         verbose_name = 'Fournisseur'
         verbose_name_plural = 'Fournisseurs'
-        ordering = ['nom']
+        ordering = ['raison_sociale']
+        indexes = [
+            models.Index(fields=['societe', 'actif']),
+            models.Index(fields=['code_fournisseur']),
+            models.Index(fields=['raison_sociale']),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.code_fournisseur and not self.code:
+            self.code = self.code_fournisseur
+        elif self.code and not self.code_fournisseur:
+            self.code_fournisseur = self.code
+        super().save(*args, **kwargs)
+
+    @property
+    def nom(self):
+        return self.raison_sociale
 
     def __str__(self):
-        return self.nom
+        return f"{self.raison_sociale} ({self.code_fournisseur or self.code})"
 
 
 class Achat(models.Model):
