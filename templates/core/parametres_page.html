@@ -167,7 +167,6 @@
               </button>
               <div class="pm-dropdown d-none" id="societes-menu" role="menu">
                 <a href="#" data-frame-src="{% url 'societe_list' %}?standalone=1" role="menuitem"><i class="fas fa-list me-2"></i>Liste des sociétés</a>
-                {% if '__all__' in user_perms or 'societe_modifier' in user_perms %}<a href="#" data-frame-src="{% url 'societe_create' %}?standalone=1" role="menuitem"><i class="fas fa-plus me-2"></i>Ajouter une société</a>{% endif %}
               </div>
             </div>
             {% endif %}
@@ -179,9 +178,7 @@
               </button>
               <div class="pm-dropdown d-none" id="utilisateurs-menu" role="menu">
                 <a href="#" data-frame-src="{% url 'utilisateur_list' %}?standalone=1" role="menuitem"><i class="fas fa-list me-2"></i>Liste des utilisateurs</a>
-                {% if '__all__' in user_perms or 'utilisateur_ajouter' in user_perms %}<a href="#" data-frame-src="{% url 'utilisateur_create' %}?standalone=1" role="menuitem"><i class="fas fa-user-plus me-2"></i>Ajouter un utilisateur</a>{% endif %}
                 {% if '__all__' in user_perms or 'role_voir' in user_perms %}<a href="#" data-frame-src="{% url 'role_list' %}?standalone=1" role="menuitem"><i class="fas fa-shield-alt me-2"></i>Rôles</a>{% endif %}
-                {% if '__all__' in user_perms or 'role_modifier' in user_perms %}<a href="#" data-frame-src="{% url 'role_create' %}?standalone=1" role="menuitem"><i class="fas fa-plus me-2"></i>Ajouter un rôle</a>{% endif %}
               </div>
             </div>
             {% endif %}

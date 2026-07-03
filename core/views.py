@@ -263,7 +263,7 @@ def societe_create(request):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Société ajoutée avec succès.')
-        return redirect('societe_list')
+        return _redirect_with_standalone(request, 'societe_list')
     return render(request, 'core/societe_form.html', {'form': form, 'title': 'Ajouter une société'})
 
 
@@ -274,7 +274,7 @@ def societe_update(request, pk):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Société modifiée avec succès.')
-        return redirect('societe_list')
+        return _redirect_with_standalone(request, 'societe_list')
     return render(request, 'core/societe_form.html', {'form': form, 'title': 'Modifier la société'})
 
 
@@ -284,7 +284,7 @@ def societe_delete(request, pk):
     if request.method == 'POST':
         societe.delete()
         messages.success(request, 'Société supprimée avec succès.')
-        return redirect('societe_list')
+        return _redirect_with_standalone(request, 'societe_list')
     return render(request, 'core/societe_confirm_delete.html', {'societe': societe})
 
 
@@ -701,7 +701,7 @@ def role_create(request):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Rôle ajouté avec succès.')
-        return redirect('role_list')
+        return _redirect_with_standalone(request, 'role_list')
     return render(request, 'core/role_form.html', {'form': form, 'title': 'Ajouter un rôle'})
 
 
@@ -712,7 +712,7 @@ def role_update(request, pk):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Rôle modifié avec succès.')
-        return redirect('role_list')
+        return _redirect_with_standalone(request, 'role_list')
     return render(request, 'core/role_form.html', {'form': form, 'title': 'Modifier le rôle'})
 
 
@@ -722,7 +722,7 @@ def role_delete(request, pk):
     if request.method == 'POST':
         role.delete()
         messages.success(request, 'Rôle supprimé avec succès.')
-        return redirect('role_list')
+        return _redirect_with_standalone(request, 'role_list')
     return render(request, 'core/role_confirm_delete.html', {'role': role})
 
 
@@ -749,7 +749,7 @@ def utilisateur_create(request):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Utilisateur ajouté avec succès.')
-        return redirect('utilisateur_list')
+        return _redirect_with_standalone(request, 'utilisateur_list')
     return render(request, 'core/utilisateur_form.html', {'form': form, 'title': 'Ajouter un utilisateur'})
 
 
@@ -762,7 +762,7 @@ def utilisateur_update(request, pk):
         # Vider le cache permissions si le rôle a changé
         clear_permissions_cache(utilisateur.user_id)
         messages.success(request, 'Utilisateur modifié avec succès.')
-        return redirect('utilisateur_list')
+        return _redirect_with_standalone(request, 'utilisateur_list')
     return render(request, 'core/utilisateur_form.html', {'form': form, 'title': 'Modifier l\'utilisateur'})
 
 
@@ -773,7 +773,7 @@ def utilisateur_delete(request, pk):
         clear_permissions_cache(utilisateur.user_id)
         utilisateur.delete()
         messages.success(request, 'Utilisateur supprimé avec succès.')
-        return redirect('utilisateur_list')
+        return _redirect_with_standalone(request, 'utilisateur_list')
     return render(request, 'core/utilisateur_confirm_delete.html', {'utilisateur': utilisateur})
 
 
