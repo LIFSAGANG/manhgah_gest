@@ -1,105 +1,82 @@
 {% extends 'core/base.html' %}
 {% block content %}
-  <div class="row justify-content-center">
-    <div class="col-12 col-lg-10">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h2 class="h5 mb-3">{{ title }}</h2>
-          <form method="post">
-            {% csrf_token %}
-            
-            <!-- Section : Informations de base -->
-            <div class="mb-4">
-              <h6 class="text-muted border-bottom pb-2">Informations de base</h6>
-              <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                  <label class="form-label">Code Société <span class="text-danger">*</span></label>
-                  {{ form.code_societe }}
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Raison Sociale <span class="text-danger">*</span></label>
-                  {{ form.raison_sociale }}
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Forme Juridique</label>
-                  {{ form.forme_juridique }}
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Numéro Registre</label>
-                  {{ form.numero_registre }}
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Numéro Fiscal</label>
-                  {{ form.numero_fiscal }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Section : Adresse -->
-            <div class="mb-4">
-              <h6 class="text-muted border-bottom pb-2">Adresse</h6>
-              <div class="row g-3 mt-1">
-                <div class="col-12">
-                  <label class="form-label">Adresse</label>
-                  {{ form.adresse }}
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Ville</label>
-                  {{ form.ville }}
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label">Code Postal</label>
-                  {{ form.code_postal }}
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label">Pays</label>
-                  {{ form.pays }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Section : Contact -->
-            <div class="mb-4">
-              <h6 class="text-muted border-bottom pb-2">Contact</h6>
-              <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                  <label class="form-label">Téléphone</label>
-                  {{ form.telephone }}
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Email</label>
-                  {{ form.email }}
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Site Web</label>
-                  {{ form.site_web }}
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Logo</label>
-                  {{ form.logo }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Section : Statut -->
-            <div class="mb-4">
-              <h6 class="text-muted border-bottom pb-2">Statut</h6>
-              <div class="row g-3 mt-1">
-                <div class="col-12">
-                  <div class="form-check">
-                    {{ form.actif }}
-                    <label class="form-check-label">Actif</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-4 pt-3 border-top">
-              <button type="submit" class="btn btn-success">Enregistrer</button>
-              <a href="{% url 'societe_list' %}{% if request.GET.embed == '1' %}?embed=1&from_parametres=1{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
-            </div>
-          </form>
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2 class="h4 mb-1">{{ title }}</h2>
+          <p class="text-muted mb-0">Renseignez les informations de la société.</p>
         </div>
+      </div>
+
+      <div class="form-shell">
+        <form method="post" action="{{ request.get_full_path }}">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Code Société <span class="text-danger">*</span></label>
+              {{ form.code_societe }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Raison Sociale <span class="text-danger">*</span></label>
+              {{ form.raison_sociale }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Forme Juridique</label>
+              {{ form.forme_juridique }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Numéro Registre</label>
+              {{ form.numero_registre }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Numéro Fiscal</label>
+              {{ form.numero_fiscal }}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Adresse</label>
+              {{ form.adresse }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Ville</label>
+              {{ form.ville }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Code Postal</label>
+              {{ form.code_postal }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Pays</label>
+              {{ form.pays }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Téléphone</label>
+              {{ form.telephone }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email</label>
+              {{ form.email }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Site Web</label>
+              {{ form.site_web }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Logo</label>
+              {{ form.logo }}
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                {{ form.actif }}
+                <label class="form-check-label">Actif</label>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+            <a href="{% url 'societe_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
+          </div>
+        </form>
       </div>
     </div>
   </div>

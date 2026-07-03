@@ -16,7 +16,7 @@
         </select>
         <button type="submit" class="btn btn-sm btn-outline-primary">Appliquer</button>
       </form>
-      <a href="{% url 'utilisateur_create' %}" class="btn btn-primary">
+      <a href="{% url 'utilisateur_create' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-primary">
         <i class="fas fa-user-plus"></i> Ajouter un utilisateur
       </a>
     </div>
@@ -72,17 +72,17 @@
             </td>
             <td class="text-end">
               <div class="btn-group btn-group-sm" role="group">
-                <a href="{% url 'utilisateur_update' utilisateur.pk %}" 
+                <a href="{% url 'utilisateur_update' utilisateur.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" 
                    class="btn btn-outline-primary" 
                    title="Modifier">
                   <i class="fas fa-edit"></i>
                 </a>
-                <a href="{% url 'utilisateur_permissions' utilisateur.pk %}" 
+                <a href="{% url 'utilisateur_permissions' utilisateur.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" 
                    class="btn btn-outline-info" 
                    title="Voir permissions">
                   <i class="fas fa-lock-open"></i>
                 </a>
-                <a href="{% url 'utilisateur_delete' utilisateur.pk %}" 
+                <a href="{% url 'utilisateur_delete' utilisateur.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" 
                    class="btn btn-outline-danger" 
                    title="Supprimer">
                   <i class="fas fa-trash"></i>
