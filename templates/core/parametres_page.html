@@ -1,249 +1,278 @@
-{% load static %}
-<!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Paramètres | Manhgah-Gest</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <style>
-      .pm-shell,
-      .pm-shell * {
-        font-family: "Manrope", "Segoe UI", sans-serif;
-      }
+{% extends 'core/base.html' %}
+{% block contacts_nav %}
+  <style>
+    /* Masquer le topbar de la page parent */
+    .topbar {
+      display: none !important;
+    }
 
-      .pm-shell {
-        min-height: calc(100vh - 44px);
-        height: calc(100vh - 44px);
-        padding: 0;
-        background:
-          radial-gradient(circle at 12% 15%, rgba(100, 100, 100, 0.24), transparent 42%),
-          radial-gradient(circle at 88% 80%, rgba(80, 80, 80, 0.2), transparent 46%),
-          linear-gradient(140deg, #0f172a 0%, #1e293b 45%, #0f172a 100%);
-      }
+    .contacts-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid rgba(229, 231, 235, 1);
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
 
-      .pm-panel {
-        max-width: 100%;
-        width: 100%;
-        margin: 0;
-        min-height: calc(100vh - 44px);
-        border-radius: 0;
-        background: rgba(255, 255, 255, 0.08);
-        border: none;
-        box-shadow: none;
-        backdrop-filter: blur(7px);
-        padding: 22px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
+    .contacts-nav .nav-left {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
 
-      .pm-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }
+    .contacts-nav .nav-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
 
-      .pm-menu-bar {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
+    .contacts-nav .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #0f172a;
+      font-weight: 600;
+    }
 
-      .pm-menu {
-        position: relative;
-      }
+    body.standalone-layout main.container-fluid {
+      margin-top: 0 !important;
+      padding-top: 130px !important;
+    }
 
-      .pm-menu-btn {
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: #e2e8f0;
-        background: rgba(15, 23, 42, 0.25);
-        border-radius: 10px;
-        padding: 11px 16px;
-        font-weight: 800;
-        transition: all 0.2s ease;
-      }
+    .contacts-nav {
+      height: 65px;
+    }
 
-      .pm-menu-btn:hover,
-      .pm-menu-btn.active {
-        border-color: #94a3b8;
-        color: #ffffff;
-        box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25);
-      }
+    .contacts-nav .btn {
+      min-width: 130px;
+    }
 
-      .pm-menu-btn i {
-        margin-left: 8px;
-        font-size: 0.85rem;
-      }
+    .contacts-nav .btn-primary {
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #fff;
+    }
 
-      .pm-dropdown {
-        position: absolute;
-        top: calc(100% + 8px);
-        left: 0;
-        width: min(340px, calc(100vw - 40px));
-        background: #273449;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        box-shadow: 0 20px 30px rgba(2, 6, 23, 0.45);
-        padding: 8px;
-        z-index: 20;
-      }
+    .contacts-nav .btn-outline-primary {
+      color: #0f172a;
+      border-color: #0f172a;
+    }
 
-      .pm-dropdown a {
-        display: block;
-        color: #ecf3ff;
-        text-decoration: none;
-        font-weight: 700;
-        padding: 10px 12px;
-        border-radius: 8px;
-      }
+    /* Styles par défaut pour les boutons de navigation */
+    .nav-btn-group .btn {
+      background: transparent;
+      border: 1px solid #d1d5db;
+      color: #6b7280;
+      transition: all 0.3s ease;
+    }
 
-      .pm-dropdown a:hover {
-        background: rgba(255, 255, 255, 0.13);
-        color: #ffffff;
-      }
+    .nav-btn-group .btn:hover {
+      color: #0f172a;
+      border-color: #0f172a;
+    }
 
-      .pm-content {
-        border-radius: 16px;
-        background: linear-gradient(180deg, #f8fbff 0%, #eef3ff 100%);
-        border: 1px solid rgba(148, 163, 184, 0.3);
-        padding: 18px;
-        min-height: 600px;
-        flex: 1;
-        overflow: hidden;
-      }
+    /* Bouton actif */
+    .nav-btn-group .btn.active {
+      background: #0f172a !important;
+      border-color: #0f172a !important;
+      color: #fff !important;
+    }
 
-      @media (max-width: 700px) {
-        .pm-panel {
-          padding: 14px;
-        }
-        .pm-menu {
-          width: 100%;
-        }
-        .pm-menu-btn {
-          width: 100%;
-          text-align: left;
-        }
-        .pm-dropdown {
-          position: static;
-          width: 100%;
-          margin-top: 8px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="topbar py-2" style="background:#bfe9ff;">
-      <div class="d-flex align-items-center justify-content-between px-3">
-        <div class="fw-bold" style="color:#0b5d7a; font-size:1.1rem;">Manhgah-Gest</div>
-        <div>
-          {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Déconnexion</a>
-          {% endif %}
+    /* Style du dropdown button pour qu'il soit cohérent */
+    .nav-btn-group .dropdown .btn.nav-btn.dropdown-toggle {
+      padding-right: 1.5rem;
+    }
+
+    .nav-btn-group .dropdown .btn.nav-btn.dropdown-toggle::after {
+      position: absolute;
+      right: 0.5rem;
+    }
+
+    /* Appliquer le style actif au dropdown button */
+    .nav-btn-group .dropdown .btn.nav-btn.dropdown-toggle.active {
+      background: #0f172a !important;
+      border-color: #0f172a !important;
+      color: #fff !important;
+    }
+
+    /* Forcer les styles du dropdown button actif même avec pseudo-classes Bootstrap */
+    button.btn.nav-btn.dropdown-toggle.active:not(:disabled):not(.disabled) {
+      background-color: #0f172a !important;
+      border-color: #0f172a !important;
+      color: #fff !important;
+    }
+
+    button.btn.nav-btn.dropdown-toggle.active {
+      background-color: #0f172a !important;
+      border-color: #0f172a !important;
+      color: #fff !important;
+    }
+
+    /* Surcharger les styles par défaut de Bootstrap pour le dropdown */
+    .dropdown-toggle.active::after {
+      filter: brightness(0) invert(1);
+    }
+
+    .dropdown-menu {
+      min-width: 200px;
+    }
+
+    .dropdown-menu a {
+      color: #0f172a;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .dropdown-menu a:hover {
+      background-color: #f0f0f0;
+      color: #0f172a;
+    }
+
+    #param-content {
+      margin-top: 0;
+      padding-top: 0;
+      height: 100%;
+      overflow: hidden !important;
+    }
+
+    /* Assurer que l'iframe prend toute la hauteur disponible */
+    #param-content iframe {
+      height: calc(100vh - 70px) !important;
+      margin-top: 0 !important;
+      width: 100% !important;
+      display: block !important;
+    }
+
+    /* Désactiver le scroll du .standalone-surface */
+    .standalone-page,
+    .standalone-surface {
+      overflow: visible !important;
+      height: auto !important;
+      max-height: none !important;
+    }
+  </style>
+  
+  <div class="contacts-nav px-3">
+    <div class="nav-left">
+      <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Accueil</a>
+      <div class="nav-btn-group" style="display: flex; gap: 10px;">
+        <a href="#" class="btn nav-btn active" id="btn-societes" data-section="societes" onclick="loadContent(event, '{% url 'societe_list' %}?standalone=1&embed=1&from_parametres=1')">Sociétés</a>
+        
+        <div class="dropdown">
+          <button class="btn nav-btn dropdown-toggle" id="btn-utilisateurs" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-section="utilisateurs">
+            Utilisateurs
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="btn-utilisateurs">
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'utilisateur_list' %}?standalone=1&embed=1&from_parametres=1'); setActiveButton('utilisateurs');">Liste des utilisateurs</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'role_list' %}?standalone=1&embed=1&from_parametres=1'); setActiveButton('utilisateurs');">Rôles</a></li>
+          </ul>
         </div>
       </div>
     </div>
 
-    <div class="pm-shell" style="height: calc(100vh - 44px); top: 44px;">
-      <section class="pm-panel">
-        <header class="pm-header" style="justify-content: flex-start; gap: 12px; flex-wrap: wrap;">
-          <nav class="pm-menu-bar" aria-label="Navigation Paramètres" style="flex:1; margin:0;">
-
-            <a href="{% url 'accueil' %}" class="pm-menu-btn" style="text-decoration:none;">
-              <i class="fa-solid fa-house me-2"></i>Accueil
-            </a>
-
-            {% if '__all__' in user_perms or 'societe_voir' in user_perms %}
-            <div class="pm-menu">
-              <button class="pm-menu-btn" type="button" data-menu-toggle="societes-menu" aria-expanded="false">
-                <i class="fa-solid fa-building me-2"></i>Sociétés<i class="fa-solid fa-chevron-down"></i>
-              </button>
-              <div class="pm-dropdown d-none" id="societes-menu" role="menu">
-                <a href="#" data-frame-src="{% url 'societe_list' %}?standalone=1" role="menuitem"><i class="fas fa-list me-2"></i>Liste des sociétés</a>
-                {% if '__all__' in user_perms or 'societe_modifier' in user_perms %}<a href="#" data-frame-src="{% url 'societe_create' %}?standalone=1" role="menuitem"><i class="fas fa-plus me-2"></i>Ajouter une société</a>{% endif %}
-              </div>
-            </div>
-            {% endif %}
-
-            {% if '__all__' in user_perms or 'utilisateur_voir' in user_perms %}
-            <div class="pm-menu">
-              <button class="pm-menu-btn" type="button" data-menu-toggle="utilisateurs-menu" aria-expanded="false">
-                <i class="fa-solid fa-users me-2"></i>Utilisateurs<i class="fa-solid fa-chevron-down"></i>
-              </button>
-              <div class="pm-dropdown d-none" id="utilisateurs-menu" role="menu">
-                <a href="#" data-frame-src="{% url 'utilisateur_list' %}?standalone=1" role="menuitem"><i class="fas fa-list me-2"></i>Liste des utilisateurs</a>
-                {% if '__all__' in user_perms or 'utilisateur_ajouter' in user_perms %}<a href="#" data-frame-src="{% url 'utilisateur_create' %}?standalone=1" role="menuitem"><i class="fas fa-user-plus me-2"></i>Ajouter un utilisateur</a>{% endif %}
-                {% if '__all__' in user_perms or 'role_voir' in user_perms %}<a href="#" data-frame-src="{% url 'role_list' %}?standalone=1" role="menuitem"><i class="fas fa-shield-alt me-2"></i>Rôles</a>{% endif %}
-                {% if '__all__' in user_perms or 'role_modifier' in user_perms %}<a href="#" data-frame-src="{% url 'role_create' %}?standalone=1" role="menuitem"><i class="fas fa-plus me-2"></i>Ajouter un rôle</a>{% endif %}
-              </div>
-            </div>
-            {% endif %}
-
-          </nav>
-        </header>
-
-        <main class="pm-content" style="padding:0; overflow:hidden; flex:1;">
-          <iframe id="pm-frame" src="{% url 'societe_list' %}?standalone=1" style="display:block; width:100%; height:100%; min-height:600px; border:none; border-radius:0;"></iframe>
-        </main>
-      </section>
+    <div class="nav-right">
+      <div class="user-info">
+        <i class="fa-solid fa-user-circle"></i>
+        <span>{{ user.username }}</span>
+      </div>
+      <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">Déconnexion</a>
     </div>
+  </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const menuButtons = document.querySelectorAll('[data-menu-toggle]');
-        const dropdowns = document.querySelectorAll('.pm-dropdown');
-        const frame = document.getElementById('pm-frame');
+  <script>
+    function loadContent(event, url) {
+      if (event) {
+        event.preventDefault();
+      }
+      const iframe = document.querySelector('#param-content iframe');
+      if (iframe) {
+        iframe.src = url;
+      }
+    }
 
-        function closeAllMenus() {
-          dropdowns.forEach(function (menu) { menu.classList.add('d-none'); });
-          menuButtons.forEach(function (button) {
-            button.classList.remove('active');
-            button.setAttribute('aria-expanded', 'false');
-          });
-        }
-
-        menuButtons.forEach(function (button) {
-          button.addEventListener('click', function (event) {
-            event.stopPropagation();
-            const menuId = button.dataset.menuToggle;
-            const menu = document.getElementById(menuId);
-            const isClosed = menu.classList.contains('d-none');
-            closeAllMenus();
-            if (isClosed) {
-              menu.classList.remove('d-none');
-              button.classList.add('active');
-              button.setAttribute('aria-expanded', 'true');
-            }
-          });
-        });
-
-        document.querySelectorAll('[data-frame-src]').forEach(function (link) {
-          link.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const src = link.getAttribute('data-frame-src');
-            frame.src = src;
-            document.querySelectorAll('[data-frame-src]').forEach(function (l) { l.classList.remove('active-item'); });
-            link.classList.add('active-item');
-            closeAllMenus();
-          });
-        });
-
-        dropdowns.forEach(function (menu) {
-          menu.addEventListener('click', function (event) { event.stopPropagation(); });
-        });
-
-        document.addEventListener('click', function () { closeAllMenus(); });
+    function setActiveButton(section) {
+      // Retirer la classe active de tous les boutons
+      document.querySelectorAll('.nav-btn-group .nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.cssText = '';
       });
-    </script>
+      
+      // Ajouter la classe active et les styles au bouton sélectionné
+      const activeBtn = document.getElementById(`btn-${section}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+        // Appliquer les styles directement via cssText
+        activeBtn.style.cssText = 'background: #0f172a !important; border-color: #0f172a !important; color: #fff !important;';
+      }
+    }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
-</html>
+    // Lors du clic sur les boutons de navigation
+    document.querySelectorAll('.nav-btn-group .nav-btn:not(.dropdown-toggle)').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const section = this.getAttribute('data-section');
+        setActiveButton(section);
+      });
+    });
+
+    // Gérer le dropdown button
+    const userDropdownBtn = document.getElementById('btn-utilisateurs');
+    if (userDropdownBtn) {
+      userDropdownBtn.addEventListener('click', function() {
+        setActiveButton('utilisateurs');
+      });
+    }
+
+    // Intercepter les messages du iframe
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'loadContent') {
+        loadContent(null, event.data.url);
+      }
+    });
+
+    // Intercepter les clics sur les liens de modification/suppression/création
+    document.addEventListener('click', function(e) {
+      const link = e.target.closest('a');
+      if (!link) return;
+
+      const href = link.getAttribute('href');
+      if (!href || href === '#') return;
+
+      // Vérifier si c'est un lien d'édition, création, suppression ou agences
+      const isEditLink = /\/(societes|utilisateurs|roles|agences)\/(.+\/)?(ajouter|modifier|supprimer|permissions)\//.test(href) ||
+                         /\/(societes|utilisateurs|roles|agences)\/ajouter\//.test(href) ||
+                         /\/(societes|utilisateurs|roles|agences)\/\d+\/(modifier|supprimer|permissions)\//.test(href) ||
+                         /\/(agences)\/\?/.test(href);
+
+      if (isEditLink && !href.includes('standalone=1')) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Ajouter les paramètres standalone et embed
+        const separator = href.includes('?') ? '&' : '?';
+        const newUrl = href + separator + 'standalone=1&embed=1&from_parametres=1';
+        loadContent(null, newUrl);
+      }
+    }, true);
+  </script>
+{% endblock %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div id="param-content">
+        <!-- Le contenu sera chargé ici par défaut (sociétés) -->
+        <iframe src="{% url 'societe_list' %}?standalone=1&embed=1&from_parametres=1" style="display:block; width:100%; height:calc(100vh - 100px); min-height:600px; border:none; border-radius:0;"></iframe>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

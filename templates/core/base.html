@@ -98,6 +98,41 @@
           flex-wrap: wrap;
         }
 
+        .contacts-nav {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          align-items: center;
+          margin: 0 12px 20px;
+          padding: 16px 0;
+          border-top: 1px solid #e5e7eb;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .contacts-nav .btn {
+          min-width: 130px;
+        }
+
+        .contacts-nav .btn-primary {
+          background: #0f172a;
+          border-color: #0f172a;
+        }
+
+        .contacts-nav .btn-outline-primary {
+          color: #0f172a;
+          border-color: #0f172a;
+        }
+
+        .contacts-nav {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          align-items: center;
+          padding: 16px 0;
+          border-top: 1px solid #e5e7eb;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
         .standalone-table-card {
           border: none;
           border-radius: 0;
@@ -157,12 +192,45 @@
           .standalone-head {
             flex-direction: column;
           }
+      </style>
+    {% endif %}
+    {% if request.GET.embed == '1' %}
+      <style>
+        .topbar,
+        .contacts-nav {
+          display: none !important;
+        }
+
+        body {
+          padding-top: 0 !important;
+        }
+
+        body.standalone-layout {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        body.standalone-layout main.container-fluid {
+          padding-top: 80px !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          padding-bottom: 0 !important;
+          margin: 0 !important;
+          max-width: 100% !important;
+          height: 100% !important;
+        }
+
+        .standalone-surface {
+          padding-top: 0 !important;
+        }
+
+        .standalone-table-card {
+          max-height: 100%;
         }
       </style>
     {% endif %}
   </head>
   <body {% if request.GET.standalone == '1' %}class="standalone-layout"{% endif %}>
-    {% if request.GET.standalone != '1' %}
     <div class="topbar bg-lightblue py-2">
       <div class="container d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center">
@@ -194,19 +262,9 @@
       </div>
     </div>
 
-    <header class="hero">
-      {% block hero %}
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center">
-            <h1 class="hero-title" style="font-size:clamp(2rem,4vw,3.2rem); font-weight:800;">Système de Gestion d'Entreprise</h1>
-            <p class="hero-sub" style="font-size:1.3rem;">Gérez efficacement votre entreprise avec nos modules intégrés</p>
-          </div>
-        </div>
-      </div>
-      {% endblock hero %}
-    </header>
-    {% endif %}
+    {% block contacts_nav %}{% endblock %}
+
+    {% block hero %}{% endblock %}
 
     <main class="{% if request.GET.standalone == '1' %}container-fluid px-3 px-md-4 py-4{% else %}container my-4{% endif %}">
       {% if messages %}
@@ -229,5 +287,41 @@
     {% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% if request.GET.from_parametres == '1' %}
+    <script>
+      // Intercepter les clics sur les liens d'édition quand on est dans la page paramètres
+      document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+        if (!href || href === '#' || href.startsWith('javascript')) return;
+
+        // Vérifier si c'est un lien d'édition, création, suppression ou navigation
+        const isEditLink = /\/(societes|utilisateurs|roles|agences)\/(.+\/)?(ajouter|modifier|supprimer|permissions)\//.test(href) ||
+                           /\/(societes|utilisateurs|roles|agences)\/ajouter\//.test(href) ||
+                           /\/(societes|utilisateurs|roles|agences)\/\d+\/(modifier|supprimer|permissions)\//.test(href) ||
+                           /\/(agences)\/\?/.test(href);
+
+        if (isEditLink) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Ajouter les paramètres standalone, embed, et from_parametres
+          const separator = href.includes('?') ? '&' : '?';
+          const newUrl = href + separator + 'standalone=1&embed=1&from_parametres=1';
+          
+          // Charger la page dans l'iframe parent
+          if (window.parent !== window) {
+            window.parent.postMessage({
+              type: 'loadContent',
+              url: newUrl
+            }, '*');
+          }
+        }
+      }, true);
+    </script>
+    {% endif %}
   </body>
 </html>

@@ -9,7 +9,7 @@
         <p class="text-muted mb-0">Liste des agences et points de vente</p>
       {% endif %}
     </div>
-    <a href="{% url 'agence_create' %}" class="btn btn-primary">Ajouter une agence</a>
+    <a href="{% url 'agence_create' %}{% if selected_societe %}?societe={{ selected_societe.pk }}{% endif %}" class="btn btn-primary">Ajouter une agence</a>
   </div>
 
   <form method="get" class="row g-2 align-items-end mb-3">

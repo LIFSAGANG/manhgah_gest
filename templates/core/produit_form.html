@@ -20,28 +20,60 @@
               {{ form.societe }}
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Date de création <span class="text-danger">*</span></label>
-              {{ form.date_creation }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Référence <span class="text-danger">*</span></label>
-              {{ form.reference }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
-              {{ form.nom }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Catégorie <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold">Catégorie</label>
               {{ form.categorie }}
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Prix unitaire <span class="text-danger">*</span></label>
-              {{ form.prix_unitaire }}
+              <label class="form-label fw-semibold">Code produit <span class="text-danger">*</span></label>
+              {{ form.code_produit }}
             </div>
             <div class="col-md-6">
-              <label class="form-label">Quantité en stock</label>
-              {{ form.quantite_stock }}
+              <label class="form-label fw-semibold">Code barre</label>
+              {{ form.code_barre }}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Nom produit <span class="text-danger">*</span></label>
+              {{ form.nom_produit }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Type produit</label>
+              {{ form.type_produit }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Unité de mesure</label>
+              {{ form.unite_mesure }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Prix achat HT</label>
+              {{ form.prix_achat_ht }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Prix vente HT <span class="text-danger">*</span></label>
+              {{ form.prix_vente_ht }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Taux TVA (%)</label>
+              {{ form.taux_tva }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Stock min</label>
+              {{ form.stock_min }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Stock max</label>
+              {{ form.stock_max }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Stock alerte</label>
+              {{ form.stock_alerte }}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Image</label>
+              {{ form.image }}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Description</label>
+              {{ form.description }}
             </div>
             <div class="col-12">
               <div class="form-check">

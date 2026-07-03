@@ -83,6 +83,8 @@ def log_activity_create_update(sender, instance, created, **kwargs):
         
         if request:
             user = getattr(request, 'user', None)
+            if user is not None and not getattr(user, 'is_authenticated', False):
+                user = None
             ip_address = get_client_ip(request)
             user_agent = get_user_agent(request)
         
@@ -130,6 +132,8 @@ def log_activity_delete(sender, instance, **kwargs):
         
         if request:
             user = getattr(request, 'user', None)
+            if user is not None and not getattr(user, 'is_authenticated', False):
+                user = None
             ip_address = get_client_ip(request)
             user_agent = get_user_agent(request)
         

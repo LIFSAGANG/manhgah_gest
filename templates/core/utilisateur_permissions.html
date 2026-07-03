@@ -65,7 +65,7 @@
 
   <div class="row mt-4">
     <div class="col-12">
-      <a href="{% url 'utilisateur_list' %}" class="btn btn-secondary btn-lg">
+      <a href="{% url 'utilisateur_list' %}{% if request.GET.embed == '1' %}?embed=1&from_parametres=1{% endif %}" class="btn btn-secondary btn-lg">
         <i class="fas fa-arrow-left"></i> Retour
       </a>
     </div>

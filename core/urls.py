@@ -111,6 +111,7 @@ urlpatterns = [
     # ============ NAVIGATION ============
     path('ventes/', views.ventes_page, name='ventes'),
     path('parametres/', views.parametres_page, name='parametres_page'),
+    path('contacts/', views.contacts_page, name='contacts_page'),
     path('statistiques/', views.module_page, {'module': 'Statistiques', 'description': 'Analyses, rapports et tableaux de bord.'}, name='statistiques'),
     path('audit/', views.activity_log, name='activity_log'),
 

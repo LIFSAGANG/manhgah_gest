@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import (Agence, Categorie, Projet, Fournisseur, Achat, Depense, Role, AppPermission, RolePermission, UtilisateurProfile, Journal, EcritureComptable, MouvementStock, Societe, Produit, Client, Facture, ActivityLog)
+from .models import (Agence, Categorie, Projet, Fournisseur, Achat, Depense, Role, AppPermission, RolePermission, UtilisateurProfile, Journal, EcritureComptable, MouvementStock, Stock, Societe, Produit, Client, Facture, ActivityLog)
 
 
 @admin.register(Societe)
@@ -11,9 +11,9 @@ class SocieteAdmin(admin.ModelAdmin):
 
 @admin.register(Produit)
 class ProduitAdmin(admin.ModelAdmin):
-    list_display = ('reference', 'nom', 'categorie', 'prix_unitaire', 'quantite_stock', 'actif')
+    list_display = ('code_produit', 'nom_produit', 'categorie', 'prix_vente_ht', 'stock_alerte', 'actif')
     list_filter = ('actif', 'categorie')
-    search_fields = ('reference', 'nom', 'categorie')
+    search_fields = ('code_produit', 'nom_produit', 'code_barre')
 
 
 @admin.register(Client)
@@ -40,9 +40,16 @@ class AgenceAdmin(admin.ModelAdmin):
 
 @admin.register(Categorie)
 class CategorieAdmin(admin.ModelAdmin):
-    list_display = ('code', 'nom', 'actif')
+    list_display = ('code_categorie', 'nom_categorie', 'societe', 'actif')
     list_filter = ('actif',)
-    search_fields = ('code', 'nom')
+    search_fields = ('code_categorie', 'nom_categorie')
+
+
+@admin.register(Stock)
+class StockAdmin(admin.ModelAdmin):
+    list_display = ('produit', 'agence', 'quantite_disponible', 'quantite_reservee', 'valeur_stock', 'date_dernier_mouvement')
+    list_filter = ('agence',)
+    search_fields = ('produit__nom_produit', 'produit__code_produit', 'agence__nom')
 
 
 @admin.register(Projet)
@@ -115,9 +122,9 @@ class EcritureComptableAdmin(admin.ModelAdmin):
 
 @admin.register(MouvementStock)
 class MouvementStockAdmin(admin.ModelAdmin):
-    list_display = ('produit', 'agence', 'quantite', 'type_mouvement', 'date_mouvement')
+    list_display = ('produit', 'agence', 'agence_destination', 'quantite', 'type_mouvement', 'utilisateur', 'date_mouvement')
     list_filter = ('type_mouvement', 'date_mouvement')
-    search_fields = ('produit__nom',)
+    search_fields = ('produit__nom_produit', 'produit__code_produit', 'reference', 'utilisateur__username')
 
 
 @admin.register(ActivityLog)

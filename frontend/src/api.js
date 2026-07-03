@@ -1,5 +1,5 @@
 // API Client pour communiquer avec Django
-const API_BASE = 'http://127.0.0.1:8000'
+const API_BASE = ''
 
 function getCookie(name) {
   const cookieValue = document.cookie
@@ -16,7 +16,7 @@ async function apiCall(url, options = {}) {
   
   try {
     const response = await fetch(fullUrl, {
-      ...(method !== 'GET' && { credentials: 'include' }),
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(method !== 'GET' && { 'X-CSRFToken': csrfToken }),
@@ -33,7 +33,7 @@ async function apiCall(url, options = {}) {
     return response.json()
   } catch (error) {
     console.error('API Call Error:', error)
-    return null
+    throw error
   }
 }
 
@@ -62,6 +62,11 @@ export function addCategorie(data) {
 // Sociétés
 export function fetchSocietes() {
   return apiCall('/api/societes/')
+}
+
+// Agences
+export function fetchAgences() {
+  return apiCall('/api/agences/')
 }
 
 // Mouvements

@@ -1,12 +1,22 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { fetchProduits, fetchCategories, fetchSocietes, fetchMouvements, addProduit } from './api'
+import {
+  fetchProduits,
+  fetchCategories,
+  fetchSocietes,
+  fetchAgences,
+  fetchMouvements,
+  addProduit,
+  addCategorie,
+  addMouvement,
+} from './api'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('accueil')
   const [produits, setProduits] = useState([])
   const [categories, setCategories] = useState([])
   const [societes, setSocietes] = useState([])
+  const [agences, setAgences] = useState([])
   const [mouvements, setMouvements] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -17,15 +27,17 @@ function App() {
   async function loadData() {
     setLoading(true)
     try {
-      const [p, c, s, m] = await Promise.all([
+      const [p, c, s, a, m] = await Promise.all([
         fetchProduits(),
         fetchCategories(),
         fetchSocietes(),
+        fetchAgences(),
         fetchMouvements(),
       ])
       setProduits(p?.results || p || [])
       setCategories(c?.results || c || [])
       setSocietes(s?.results || s || [])
+      setAgences(a?.results || a || [])
       setMouvements(m?.results || m || [])
     } catch (error) {
       console.error('Erreur chargement données:', error)
@@ -43,7 +55,7 @@ function App() {
           {currentPage === 'accueil' && <Accueil produits={produits} categories={categories} mouvements={mouvements} />}
           {currentPage === 'produits' && <Produits produits={produits} societes={societes} categories={categories} onRefresh={loadData} />}
           {currentPage === 'categories' && <Categories categories={categories} societes={societes} onRefresh={loadData} />}
-          {currentPage === 'mouvements' && <Mouvements mouvements={mouvements} produits={produits} onRefresh={loadData} />}
+          {currentPage === 'mouvements' && <Mouvements mouvements={mouvements} produits={produits} agences={agences} onRefresh={loadData} />}
           {currentPage === 'societes' && <Societes societes={societes} onRefresh={loadData} />}
         </div>
       </div>
@@ -117,22 +129,46 @@ function Card({ title, count }) {
 function Produits({ produits, societes, categories, onRefresh }) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
-    reference: '',
-    nom: '',
-    prix_unitaire: '',
-    date_creation: '',
+    code_produit: '',
+    nom_produit: '',
+    prix_vente_ht: '',
+    type_produit: 'Bien',
+    unite_mesure: 'Unité',
     societe: societes.length > 0 ? societes[0].id : '',
     categorie: categories.length > 0 ? categories[0].id : '',
   })
   const [submitting, setSubmitting] = useState(false)
 
+  const findSocieteNom = (societeId) => {
+    const societe = societes.find((s) => String(s.id) === String(societeId))
+    return societe?.raison_sociale || societe?.nom || '-'
+  }
+
+  const findCategorieNom = (categorieId) => {
+    const categorie = categories.find((c) => String(c.id) === String(categorieId))
+    return categorie?.nom_categorie || categorie?.nom || '-'
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitting(true)
     try {
-      await addProduit(form)
+      await addProduit({
+        ...form,
+        societe: form.societe ? Number(form.societe) : null,
+        categorie: form.categorie ? Number(form.categorie) : null,
+        prix_vente_ht: form.prix_vente_ht ? Number(form.prix_vente_ht) : 0,
+      })
       alert('Produit enregistré ✓')
-      setForm({ reference: '', nom: '', prix_unitaire: '', date_creation: '', societe: societes[0]?.id || '', categorie: categories[0]?.id || '' })
+      setForm({
+        code_produit: '',
+        nom_produit: '',
+        prix_vente_ht: '',
+        type_produit: 'Bien',
+        unite_mesure: 'Unité',
+        societe: societes[0]?.id || '',
+        categorie: categories[0]?.id || '',
+      })
       setShowForm(false)
       onRefresh()
     } catch (error) {
@@ -174,9 +210,9 @@ function Produits({ produits, societes, categories, onRefresh }) {
                 <label>Référence *</label>
                 <input
                   type="text"
-                  placeholder="REF-001"
-                  value={form.reference}
-                  onChange={(e) => setForm({ ...form, reference: e.target.value })}
+                  placeholder="PROD-001"
+                  value={form.code_produit}
+                  onChange={(e) => setForm({ ...form, code_produit: e.target.value })}
                   required
                 />
               </div>
@@ -187,8 +223,8 @@ function Produits({ produits, societes, categories, onRefresh }) {
                 <input
                   type="text"
                   placeholder="Nom du produit"
-                  value={form.nom}
-                  onChange={(e) => setForm({ ...form, nom: e.target.value })}
+                  value={form.nom_produit}
+                  onChange={(e) => setForm({ ...form, nom_produit: e.target.value })}
                   required
                 />
               </div>
@@ -201,7 +237,7 @@ function Produits({ produits, societes, categories, onRefresh }) {
                   <option value="">-- Sélectionner --</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.nom}
+                      {c.nom_categorie || c.nom}
                     </option>
                   ))}
                 </select>
@@ -214,19 +250,18 @@ function Produits({ produits, societes, categories, onRefresh }) {
                   type="number"
                   placeholder="0.00"
                   step="0.01"
-                  value={form.prix_unitaire}
-                  onChange={(e) => setForm({ ...form, prix_unitaire: e.target.value })}
+                  value={form.prix_vente_ht}
+                  onChange={(e) => setForm({ ...form, prix_vente_ht: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Date création *</label>
-                <input
-                  type="date"
-                  value={form.date_creation}
-                  onChange={(e) => setForm({ ...form, date_creation: e.target.value })}
-                  required
-                />
+                <label>Type produit</label>
+                <select value={form.type_produit} onChange={(e) => setForm({ ...form, type_produit: e.target.value })}>
+                  <option value="Bien">Bien</option>
+                  <option value="Service">Service</option>
+                  <option value="Consommable">Consommable</option>
+                </select>
               </div>
             </div>
             <button type="submit" className="btn-success" disabled={submitting}>
@@ -256,12 +291,12 @@ function Produits({ produits, societes, categories, onRefresh }) {
             ) : (
               produits.map((p) => (
                 <tr key={p.id}>
-                  <td>{p.reference}</td>
-                  <td>{p.nom}</td>
-                  <td>{p.prix_unitaire}</td>
-                  <td>{p.categorie_nom || '-'}</td>
-                  <td>{p.societe_nom || '-'}</td>
-                  <td>{p.quantite_stock}</td>
+                  <td>{p.code_produit || p.reference || '-'}</td>
+                  <td>{p.nom_produit || p.nom || '-'}</td>
+                  <td>{p.prix_vente_ht ?? p.prix_unitaire ?? '-'}</td>
+                  <td>{findCategorieNom(p.categorie)}</td>
+                  <td>{findSocieteNom(p.societe)}</td>
+                  <td>{p.stock_alerte ?? p.quantite_stock ?? 0}</td>
                 </tr>
               ))
             )}
@@ -273,12 +308,103 @@ function Produits({ produits, societes, categories, onRefresh }) {
 }
 
 function Categories({ categories, societes, onRefresh }) {
+  const [showForm, setShowForm] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [form, setForm] = useState({
+    code_categorie: '',
+    nom_categorie: '',
+    societe: societes[0]?.id || '',
+    description: '',
+  })
+
+  const findSocieteNom = (societeId) => {
+    const societe = societes.find((s) => String(s.id) === String(societeId))
+    return societe?.raison_sociale || societe?.nom || '-'
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    try {
+      await addCategorie({
+        ...form,
+        societe: form.societe ? Number(form.societe) : null,
+      })
+      alert('Catégorie enregistrée ✓')
+      setForm({ code_categorie: '', nom_categorie: '', societe: societes[0]?.id || '', description: '' })
+      setShowForm(false)
+      onRefresh()
+    } catch (error) {
+      alert('Erreur: ' + error.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="page">
       <div className="page-header">
         <h2>🏷️ Catégories ({categories.length})</h2>
-        <button className="btn-primary">+ Ajouter</button>
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Fermer' : '+ Ajouter'}
+        </button>
       </div>
+
+      {showForm && (
+        <div className="form-container">
+          <form onSubmit={handleSubmit}>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Société *</label>
+                <select
+                  value={form.societe}
+                  onChange={(e) => setForm({ ...form, societe: e.target.value })}
+                  required
+                >
+                  <option value="">-- Sélectionner --</option>
+                  {societes.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.raison_sociale || s.nom}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Code catégorie *</label>
+                <input
+                  type="text"
+                  value={form.code_categorie}
+                  onChange={(e) => setForm({ ...form, code_categorie: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Nom catégorie *</label>
+                <input
+                  type="text"
+                  value={form.nom_categorie}
+                  onChange={(e) => setForm({ ...form, nom_categorie: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <input
+                  type="text"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
+            </div>
+            <button type="submit" className="btn-success" disabled={submitting}>
+              {submitting ? 'Enregistrement...' : 'Enregistrer'}
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="table-container">
         <table>
           <thead>
@@ -297,9 +423,9 @@ function Categories({ categories, societes, onRefresh }) {
             ) : (
               categories.map((c) => (
                 <tr key={c.id}>
-                  <td>{c.code}</td>
-                  <td>{c.nom}</td>
-                  <td>{c.societe_nom || '-'}</td>
+                  <td>{c.code_categorie || c.code || '-'}</td>
+                  <td>{c.nom_categorie || c.nom || '-'}</td>
+                  <td>{findSocieteNom(c.societe)}</td>
                   <td>{c.description || '-'}</td>
                 </tr>
               ))
@@ -311,13 +437,143 @@ function Categories({ categories, societes, onRefresh }) {
   )
 }
 
-function Mouvements({ mouvements, produits, onRefresh }) {
+function Mouvements({ mouvements, produits, agences, onRefresh }) {
+  const [showForm, setShowForm] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [form, setForm] = useState({
+    produit: produits[0]?.id || '',
+    agence: '',
+    type_mouvement: 'entree',
+    quantite: '',
+    prix_unitaire: '',
+    agence_destination: '',
+    reference: '',
+    motif: '',
+  })
+
+  const findProduitNom = (produitId) => {
+    const produit = produits.find((p) => String(p.id) === String(produitId))
+    return produit?.nom_produit || produit?.nom || '-'
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    try {
+      await addMouvement({
+        ...form,
+        produit: form.produit ? Number(form.produit) : null,
+        agence: form.agence ? Number(form.agence) : null,
+        agence_destination: form.agence_destination ? Number(form.agence_destination) : null,
+        quantite: form.quantite ? Number(form.quantite) : 0,
+        prix_unitaire: form.prix_unitaire ? Number(form.prix_unitaire) : null,
+      })
+      alert('Mouvement enregistré ✓')
+      setForm({
+        produit: produits[0]?.id || '',
+        agence: '',
+        type_mouvement: 'entree',
+        quantite: '',
+        prix_unitaire: '',
+        agence_destination: '',
+        reference: '',
+        motif: '',
+      })
+      setShowForm(false)
+      onRefresh()
+    } catch (error) {
+      alert('Erreur: ' + error.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="page">
       <div className="page-header">
         <h2>📊 Mouvements Stock ({mouvements.length})</h2>
-        <button className="btn-primary">+ Ajouter</button>
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Fermer' : '+ Ajouter'}
+        </button>
       </div>
+
+      {showForm && (
+        <div className="form-container">
+          <form onSubmit={handleSubmit}>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Produit *</label>
+                <select value={form.produit} onChange={(e) => setForm({ ...form, produit: e.target.value })} required>
+                  <option value="">-- Sélectionner --</option>
+                  {produits.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nom_produit || p.nom}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Agence source *</label>
+                <select value={form.agence} onChange={(e) => setForm({ ...form, agence: e.target.value })} required>
+                  <option value="">-- Sélectionner --</option>
+                  {agences.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nom}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Type mouvement *</label>
+                <select value={form.type_mouvement} onChange={(e) => setForm({ ...form, type_mouvement: e.target.value })} required>
+                  <option value="entree">Entrée</option>
+                  <option value="sortie">Sortie</option>
+                  <option value="transfert">Transfert</option>
+                  <option value="ajustement">Ajustement</option>
+                  <option value="inventaire">Inventaire</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Quantité *</label>
+                <input type="number" value={form.quantite} onChange={(e) => setForm({ ...form, quantite: e.target.value })} required />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Prix unitaire</label>
+                <input type="number" step="0.01" value={form.prix_unitaire} onChange={(e) => setForm({ ...form, prix_unitaire: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Agence destination</label>
+                <select value={form.agence_destination} onChange={(e) => setForm({ ...form, agence_destination: e.target.value })}>
+                  <option value="">-- Aucune --</option>
+                  {agences.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nom}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Référence</label>
+                <input type="text" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Motif</label>
+                <input type="text" value={form.motif} onChange={(e) => setForm({ ...form, motif: e.target.value })} />
+              </div>
+            </div>
+            <button type="submit" className="btn-success" disabled={submitting}>
+              {submitting ? 'Enregistrement...' : 'Enregistrer'}
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="table-container">
         <table>
           <thead>
@@ -336,10 +592,10 @@ function Mouvements({ mouvements, produits, onRefresh }) {
             ) : (
               mouvements.map((m) => (
                 <tr key={m.id}>
-                  <td>{m.produit_nom || '-'}</td>
+                  <td>{findProduitNom(m.produit)}</td>
                   <td>{m.type_mouvement}</td>
                   <td>{m.quantite}</td>
-                  <td>{m.created_at?.split('T')[0] || '-'}</td>
+                  <td>{(m.date_mouvement || m.created_at || '').split('T')[0] || '-'}</td>
                 </tr>
               ))
             )}
@@ -376,8 +632,8 @@ function Societes({ societes, onRefresh }) {
             ) : (
               societes.map((s) => (
                 <tr key={s.id}>
-                  <td>{s.code}</td>
-                  <td>{s.nom}</td>
+                  <td>{s.code_societe || s.code || '-'}</td>
+                  <td>{s.raison_sociale || s.nom || '-'}</td>
                   <td>{s.ville || '-'}</td>
                   <td>{s.telephone || '-'}</td>
                   <td>{s.email || '-'}</td>

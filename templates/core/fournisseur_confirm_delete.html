@@ -8,7 +8,7 @@
     <form method="post">
       {% csrf_token %}
       <button type="submit" class="btn btn-danger">Supprimer</button>
-      <a href="{% url 'fournisseur_list' %}" class="btn btn-outline-secondary">Annuler</a>
+      <a href="{% url 'fournisseur_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% endif %}" class="btn btn-outline-secondary">Annuler</a>
     </form>
   </div>
 {% endblock %}

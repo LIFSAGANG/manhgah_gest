@@ -26,6 +26,7 @@
               <tr>
                 <th>Code</th>
                 <th>Nom</th>
+                <th>Parent</th>
                 <th>Description</th>
                 <th>Actif</th>
                 <th></th>
@@ -34,8 +35,9 @@
             <tbody>
               {% for categorie in categories %}
                 <tr>
-                  <td>{{ categorie.code }}</td>
-                  <td>{{ categorie.nom }}</td>
+                  <td>{{ categorie.code_categorie }}</td>
+                  <td>{{ categorie.nom_categorie }}</td>
+                  <td>{{ categorie.categorie_parent.nom_categorie|default:'-' }}</td>
                   <td>{{ categorie.description|truncatewords:3 }}</td>
                   <td>{% if categorie.actif %}Oui{% else %}Non{% endif %}</td>
                   <td class="text-end">
@@ -45,7 +47,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="5" class="empty-state">Aucune catégorie enregistrée.</td>
+                  <td colspan="6" class="empty-state">Aucune catégorie enregistrée.</td>
                 </tr>
               {% endfor %}
             </tbody>

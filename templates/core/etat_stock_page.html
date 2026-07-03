@@ -42,14 +42,14 @@
             <tbody>
               {% for produit in produits %}
                 <tr>
-                  <td>{{ produit.reference }}</td>
-                  <td>{{ produit.nom }}</td>
+                  <td>{{ produit.code_produit }}</td>
+                  <td>{{ produit.nom_produit }}</td>
                   <td>{{ produit.categorie }}</td>
-                  <td class="text-end">{{ produit.quantite_stock }}</td>
+                  <td class="text-end">{{ produit.quantite_stock_calculee }}</td>
                   <td>
-                    {% if produit.quantite_stock == 0 %}
+                    {% if produit.quantite_stock_calculee == 0 %}
                       <span class="badge bg-danger">Rupture</span>
-                    {% elif produit.quantite_stock < 10 %}
+                    {% elif produit.quantite_stock_calculee <= produit.stock_alerte %}
                       <span class="badge bg-warning text-dark">Faible</span>
                     {% else %}
                       <span class="badge bg-success">Disponible</span>

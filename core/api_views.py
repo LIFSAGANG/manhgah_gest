@@ -1,15 +1,16 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
 from .models import (
     Societe, Produit, Client, Facture, Agence, Categorie, Projet,
-    Fournisseur, Achat, Depense, Journal, EcritureComptable,
+    Fournisseur, Achat, Depense, Journal, EcritureComptable, Stock,
     MouvementStock, Role, AppPermission, RolePermission,
     UtilisateurProfile, ActivityLog
 )
 from .serializers import (
     SocieteSerializer, ProduitSerializer, ClientSerializer, FactureSerializer,
     AgenceSerializer, CategorieSerializer, ProjetSerializer, FournisseurSerializer,
-    AchatSerializer, DepenseSerializer, JournalSerializer, EcritureComptableSerializer,
+    AchatSerializer, DepenseSerializer, JournalSerializer, EcritureComptableSerializer, StockSerializer,
     MouvementStockSerializer, RoleSerializer, AppPermissionSerializer,
     RolePermissionSerializer, UtilisateurProfileSerializer, ActivityLogSerializer
 )
@@ -65,9 +66,25 @@ class EcritureComptableViewSet(BaseModelViewSet):
     queryset = EcritureComptable.objects.all()
     serializer_class = EcritureComptableSerializer
 
+class StockViewSet(BaseModelViewSet):
+    queryset = Stock.objects.all()
+    serializer_class = StockSerializer
+
 class MouvementStockViewSet(BaseModelViewSet):
     queryset = MouvementStock.objects.all()
     serializer_class = MouvementStockSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        if user is None:
+            user = get_user_model().objects.order_by('id').first()
+            if user is None:
+                user = get_user_model().objects.create(
+                    username='system_api',
+                    email='system_api@local',
+                    is_active=True,
+                )
+        serializer.save(utilisateur=user)
 
 class RoleViewSet(BaseModelViewSet):
     queryset = Role.objects.all()

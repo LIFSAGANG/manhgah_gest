@@ -27,15 +27,27 @@ class SocieteForm(forms.ModelForm):
 class ProduitForm(forms.ModelForm):
     class Meta:
         model = Produit
-        fields = ['societe', 'reference', 'nom', 'categorie', 'prix_unitaire', 'date_creation', 'quantite_stock', 'actif']
+        fields = [
+            'societe', 'categorie', 'code_produit', 'code_barre', 'nom_produit', 'description',
+            'type_produit', 'unite_mesure', 'prix_achat_ht', 'prix_vente_ht', 'taux_tva',
+            'stock_min', 'stock_max', 'stock_alerte', 'image', 'actif'
+        ]
         widgets = {
             'societe': forms.Select(attrs={'class': 'form-select'}),
-            'reference': forms.TextInput(attrs={'class': 'form-control'}),
-            'nom': forms.TextInput(attrs={'class': 'form-control'}),
             'categorie': forms.Select(attrs={'class': 'form-select'}),
-            'prix_unitaire': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'date_creation': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'quantite_stock': forms.NumberInput(attrs={'class': 'form-control'}),
+            'code_produit': forms.TextInput(attrs={'class': 'form-control'}),
+            'code_barre': forms.TextInput(attrs={'class': 'form-control'}),
+            'nom_produit': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'type_produit': forms.Select(attrs={'class': 'form-select'}),
+            'unite_mesure': forms.TextInput(attrs={'class': 'form-control'}),
+            'prix_achat_ht': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'prix_vente_ht': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'taux_tva': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'stock_min': forms.NumberInput(attrs={'class': 'form-control'}),
+            'stock_max': forms.NumberInput(attrs={'class': 'form-control'}),
+            'stock_alerte': forms.NumberInput(attrs={'class': 'form-control'}),
+            'image': forms.TextInput(attrs={'class': 'form-control'}),
             'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -174,12 +186,12 @@ class DepenseForm(forms.ModelForm):
 class CategorieForm(forms.ModelForm):
     class Meta:
         model = Categorie
-        fields = ['societe', 'code', 'nom', 'date_creation', 'description', 'actif']
+        fields = ['societe', 'code_categorie', 'nom_categorie', 'categorie_parent', 'description', 'actif']
         widgets = {
             'societe': forms.Select(attrs={'class': 'form-select'}),
-            'code': forms.TextInput(attrs={'class': 'form-control'}),
-            'nom': forms.TextInput(attrs={'class': 'form-control'}),
-            'date_creation': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'code_categorie': forms.TextInput(attrs={'class': 'form-control'}),
+            'nom_categorie': forms.TextInput(attrs={'class': 'form-control'}),
+            'categorie_parent': forms.Select(attrs={'class': 'form-select'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -251,6 +263,23 @@ class UtilisateurProfileForm(forms.ModelForm):
         if self.instance and self.instance.pk and self.instance.user:
             self.fields['nom_utilisateur'].initial = self.instance.user.username
 
+    def clean_nom_utilisateur(self):
+        nom_utilisateur = self.cleaned_data.get('nom_utilisateur')
+        from django.contrib.auth.models import User
+        
+        # Pour une modification, vérifier que le username n'est pas utilisé par un autre utilisateur
+        if self.instance.pk and self.instance.user:
+            # C'est une modification, vérifier que le username ne soit pas utilisé ailleurs
+            existing_users = User.objects.filter(username=nom_utilisateur).exclude(id=self.instance.user_id)
+            if existing_users.exists():
+                raise forms.ValidationError(f"Le nom d'utilisateur '{nom_utilisateur}' est déjà utilisé.")
+        else:
+            # C'est une création, vérifier que le username n'existe pas
+            if User.objects.filter(username=nom_utilisateur).exists():
+                raise forms.ValidationError(f"Le nom d'utilisateur '{nom_utilisateur}' est déjà utilisé.")
+        
+        return nom_utilisateur
+
     def save(self, commit=True):
         profile = super().save(commit=False)
         nom_utilisateur = self.cleaned_data.get('nom_utilisateur')
@@ -308,15 +337,16 @@ class EcritureComptableForm(forms.ModelForm):
 
 
 class MouvementStockForm(forms.ModelForm):
-    date_mouvement = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}))
-
     class Meta:
         model = MouvementStock
-        fields = ['produit', 'agence', 'quantite', 'type_mouvement', 'date_mouvement', 'remarque']
+        fields = ['produit', 'agence', 'type_mouvement', 'quantite', 'prix_unitaire', 'agence_destination', 'reference', 'motif']
         widgets = {
             'produit': forms.Select(attrs={'class': 'form-select'}),
             'agence': forms.Select(attrs={'class': 'form-select'}),
-            'quantite': forms.NumberInput(attrs={'class': 'form-control'}),
             'type_mouvement': forms.Select(attrs={'class': 'form-select'}),
-            'remarque': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'quantite': forms.NumberInput(attrs={'class': 'form-control'}),
+            'prix_unitaire': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'agence_destination': forms.Select(attrs={'class': 'form-select'}),
+            'reference': forms.TextInput(attrs={'class': 'form-control'}),
+            'motif': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }

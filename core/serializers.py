@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Societe, Produit, Client, Facture, Agence, Categorie, Projet,
-    Fournisseur, Achat, Depense, Journal, EcritureComptable,
+    Fournisseur, Achat, Depense, Journal, EcritureComptable, Stock,
     MouvementStock, Role, AppPermission, RolePermission,
     UtilisateurProfile, ActivityLog
 )
@@ -66,10 +66,16 @@ class EcritureComptableSerializer(serializers.ModelSerializer):
         model = EcritureComptable
         fields = '__all__'
 
+class StockSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stock
+        fields = '__all__'
+
 class MouvementStockSerializer(serializers.ModelSerializer):
     class Meta:
         model = MouvementStock
         fields = '__all__'
+        read_only_fields = ['utilisateur', 'date_mouvement']
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:

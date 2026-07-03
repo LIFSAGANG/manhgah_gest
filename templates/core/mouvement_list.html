@@ -20,8 +20,11 @@
               <tr>
                 <th>Produit</th>
                 <th>Agence</th>
+                <th>Destination</th>
                 <th>Quantité</th>
                 <th>Type</th>
+                <th>Référence</th>
+                <th>Utilisateur</th>
                 <th>Date</th>
                 <th></th>
               </tr>
@@ -29,11 +32,14 @@
             <tbody>
               {% for mouvement in mouvements %}
                 <tr>
-                  <td>{{ mouvement.produit.nom }}</td>
+                  <td>{{ mouvement.produit.nom_produit }}</td>
                   <td>{{ mouvement.agence.nom }}</td>
+                  <td>{{ mouvement.agence_destination.nom|default:'-' }}</td>
                   <td>{{ mouvement.quantite }}</td>
                   <td><span class="badge bg-secondary">{{ mouvement.type_mouvement }}</span></td>
-                  <td>{{ mouvement.date_mouvement|date:'d/m/Y' }}</td>
+                  <td>{{ mouvement.reference|default:'-' }}</td>
+                  <td>{{ mouvement.utilisateur.username }}</td>
+                  <td>{{ mouvement.date_mouvement|date:'d/m/Y H:i' }}</td>
                   <td class="text-end">
                     <a href="{% url 'mouvement_update' mouvement.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
                     <a href="{% url 'mouvement_delete' mouvement.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
@@ -41,7 +47,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6" class="empty-state">Aucun mouvement enregistré.</td>
+                  <td colspan="9" class="empty-state">Aucun mouvement enregistré.</td>
                 </tr>
               {% endfor %}
             </tbody>

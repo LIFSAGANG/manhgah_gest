@@ -96,7 +96,7 @@
 
             <div class="mt-4 pt-3 border-top">
               <button type="submit" class="btn btn-success">Enregistrer</button>
-              <a href="{% url 'societe_list' %}" class="btn btn-secondary ms-2">Annuler</a>
+              <a href="{% url 'societe_list' %}{% if request.GET.embed == '1' %}?embed=1&from_parametres=1{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
             </div>
           </form>
         </div>

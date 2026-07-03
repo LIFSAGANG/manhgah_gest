@@ -17,27 +17,31 @@
           <table class="table table-striped table-hover align-middle">
             <thead>
               <tr>
-                <th>Référence</th>
-                <th>Nom</th>
+                <th>Code produit</th>
+                <th>Produit</th>
+                <th>Agence</th>
                 <th>Catégorie</th>
-                <th>Prix unitaire</th>
-                <th class="text-end">Quantité</th>
+                <th>Prix achat HT</th>
+                <th class="text-end">Qté dispo</th>
+                <th class="text-end">Qté réservée</th>
                 <th class="text-end">Valeur stock</th>
               </tr>
             </thead>
             <tbody>
-              {% for produit in produits %}
+              {% for stock in stocks %}
                 <tr>
-                  <td>{{ produit.reference }}</td>
-                  <td>{{ produit.nom }}</td>
-                  <td>{{ produit.categorie }}</td>
-                  <td>{{ produit.prix_unitaire }}</td>
-                  <td class="text-end">{{ produit.quantite_stock }}</td>
-                  <td class="text-end">{{ produit.valeur_stock|floatformat:2 }}</td>
+                  <td>{{ stock.produit.code_produit }}</td>
+                  <td>{{ stock.produit.nom_produit }}</td>
+                  <td>{{ stock.agence.nom }}</td>
+                  <td>{{ stock.produit.categorie }}</td>
+                  <td>{{ stock.produit.prix_achat_ht }}</td>
+                  <td class="text-end">{{ stock.quantite_disponible }}</td>
+                  <td class="text-end">{{ stock.quantite_reservee }}</td>
+                  <td class="text-end">{{ stock.valeur_stock|floatformat:2 }}</td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6" class="empty-state">Aucun produit enregistré.</td>
+                  <td colspan="8" class="empty-state">Aucun stock enregistré.</td>
                 </tr>
               {% endfor %}
             </tbody>

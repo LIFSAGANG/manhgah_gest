@@ -4,16 +4,28 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q, Sum
+from django.db.models.functions import Coalesce
 from django.urls import reverse
-from .models import (Societe, Produit, Client, Facture, Agence, Categorie, Projet, Fournisseur, Achat, Depense, Role, AppPermission, RolePermission, UtilisateurProfile, Journal, EcritureComptable, MouvementStock, ActivityLog)
+from .models import (Societe, Produit, Client, Facture, Agence, Categorie, Projet, Fournisseur, Achat, Depense, Role, AppPermission, RolePermission, UtilisateurProfile, Journal, EcritureComptable, Stock, MouvementStock, ActivityLog)
 from .forms import (SocieteForm, ProduitForm, ClientForm, FactureForm, AgenceForm, CategorieForm, ProjetForm, FournisseurForm, AchatForm, DepenseForm, RoleForm, AppPermissionForm, RolePermissionForm, UtilisateurProfileForm, JournalForm, EcritureComptableForm, MouvementStockForm)
 from .middleware import permission_required, clear_permissions_cache
 
 
 def _redirect_with_standalone(request, route_name):
     url = reverse(route_name)
+    params = []
+    
     if request.GET.get('standalone') == '1':
-        return redirect(f'{url}?standalone=1')
+        params.append('standalone=1')
+    if request.GET.get('embed') == '1':
+        params.append('embed=1')
+    if request.GET.get('from_parametres') == '1':
+        params.append('from_parametres=1')
+    if request.GET.get('from_contacts') == '1':
+        params.append('from_contacts=1')
+    
+    if params:
+        return redirect(f'{url}?{"&".join(params)}')
     return redirect(url)
 
 
@@ -36,7 +48,7 @@ def accueil(request):
         {'title': 'Ventes', 'subtitle': 'Factures clients', 'icon': 'fa-chart-column', 'link': 'ventes', 'color_class': 'bg-blue', 'codes': ['vente_voir', 'facture_ajouter', 'client_voir']},
         {'title': 'Achats', 'subtitle': 'Commandes et approvisionnement', 'icon': 'fa-cart-shopping', 'link': 'achat_list', 'color_class': 'bg-danger', 'codes': ['achat_voir', 'fournisseur_voir']},
         {'title': 'Comptabilité', 'subtitle': 'Journaux et écritures', 'icon': 'fa-calculator', 'link': 'comptabilite_page', 'color_class': 'bg-purple', 'codes': ['ecriture_voir', 'journal_voir', 'rapport_comptable_voir']},
-        {'title': 'Contacts', 'subtitle': 'Clients et fournisseurs', 'icon': 'fa-address-book', 'link': 'client_list', 'color_class': 'bg-teal', 'codes': ['client_voir', 'contact_voir', 'fournisseur_voir']},
+        {'title': 'Contacts', 'subtitle': 'Clients et fournisseurs', 'icon': 'fa-address-book', 'link': 'contacts_page', 'color_class': 'bg-teal', 'codes': ['client_voir', 'contact_voir', 'fournisseur_voir']},
         {'title': 'Statistique', 'subtitle': 'Analyses et tableaux de bord', 'icon': 'fa-chart-pie', 'link': 'statistiques', 'color_class': 'bg-success', 'codes': ['statistique_voir', 'rapport_voir']},
         {'title': 'Paramètre', 'subtitle': 'Sociétés et utilisateurs', 'icon': 'fa-gear', 'link': 'parametres_page', 'color_class': 'bg-dark', 'codes': ['utilisateur_voir', 'role_voir', 'societe_voir']},
     ]
@@ -64,6 +76,11 @@ def comptabilite_page(request):
 @login_required
 def parametres_page(request):
     return render(request, 'core/parametres_page.html')
+
+
+@login_required
+def contacts_page(request):
+    return render(request, 'core/contacts_page.html')
 
 
 @login_required
@@ -226,10 +243,12 @@ def etats_tiers_page(request):
 
 @login_required
 def etat_stock_page(request):
-    produits = Produit.objects.all().order_by('nom')
+    produits = Produit.objects.annotate(
+        quantite_stock_calculee=Coalesce(Sum('stocks__quantite_disponible'), 0)
+    ).order_by('nom_produit')
     total_produits = produits.count()
-    total_quantite = produits.aggregate(total=Sum('quantite_stock'))['total'] or 0
-    produits_rupture = produits.filter(quantite_stock=0).count()
+    total_quantite = Stock.objects.aggregate(total=Sum('quantite_disponible'))['total'] or 0
+    produits_rupture = sum(1 for produit in produits if produit.quantite_stock_calculee <= (produit.stock_alerte or 0))
 
     return render(
         request,
@@ -245,10 +264,12 @@ def etat_stock_page(request):
 
 @login_required
 def inventaire_stock_page(request):
-    produits = list(Produit.objects.all().order_by('nom'))
-    for produit in produits:
-        produit.valeur_stock = produit.prix_unitaire * produit.quantite_stock
-    return render(request, 'core/inventaire_stock_page.html', {'produits': produits})
+    stocks = list(
+        Stock.objects.select_related('produit', 'agence', 'produit__categorie')
+        .all()
+        .order_by('produit__nom_produit', 'agence__nom')
+    )
+    return render(request, 'core/inventaire_stock_page.html', {'stocks': stocks})
 
 
 @login_required
@@ -263,7 +284,7 @@ def societe_create(request):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Société ajoutée avec succès.')
-        return redirect('societe_list')
+        return _redirect_with_standalone(request, 'societe_list')
     return render(request, 'core/societe_form.html', {'form': form, 'title': 'Ajouter une société'})
 
 
@@ -274,7 +295,7 @@ def societe_update(request, pk):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Société modifiée avec succès.')
-        return redirect('societe_list')
+        return _redirect_with_standalone(request, 'societe_list')
     return render(request, 'core/societe_form.html', {'form': form, 'title': 'Modifier la société'})
 
 
@@ -284,7 +305,7 @@ def societe_delete(request, pk):
     if request.method == 'POST':
         societe.delete()
         messages.success(request, 'Société supprimée avec succès.')
-        return redirect('societe_list')
+        return _redirect_with_standalone(request, 'societe_list')
     return render(request, 'core/societe_confirm_delete.html', {'societe': societe})
 
 
@@ -463,12 +484,21 @@ def agence_create(request):
         initial['societe'] = societe_id
     form = AgenceForm(request.POST or None, initial=initial)
     if request.method == 'POST' and form.is_valid():
-        form.save()
+        instance = form.save(commit=False)
+        # Forcer la societe_id si elle est fournie
+        if societe_id:
+            instance.societe_id = int(societe_id)
+        instance.save()
         messages.success(request, 'Agence ajoutée avec succès.')
         if societe_id:
             return redirect(f"{reverse('agence_list')}?societe={societe_id}")
         return redirect('agence_list')
-    return render(request, 'core/agence_form.html', {'form': form, 'title': 'Ajouter une agence'})
+    context = {
+        'form': form,
+        'title': 'Ajouter une agence',
+        'societe_id': societe_id,
+    }
+    return render(request, 'core/agence_form.html', context)
 
 
 @login_required
@@ -701,7 +731,7 @@ def role_create(request):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Rôle ajouté avec succès.')
-        return redirect('role_list')
+        return _redirect_with_standalone(request, 'role_list')
     return render(request, 'core/role_form.html', {'form': form, 'title': 'Ajouter un rôle'})
 
 
@@ -712,7 +742,7 @@ def role_update(request, pk):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Rôle modifié avec succès.')
-        return redirect('role_list')
+        return _redirect_with_standalone(request, 'role_list')
     return render(request, 'core/role_form.html', {'form': form, 'title': 'Modifier le rôle'})
 
 
@@ -722,7 +752,7 @@ def role_delete(request, pk):
     if request.method == 'POST':
         role.delete()
         messages.success(request, 'Rôle supprimé avec succès.')
-        return redirect('role_list')
+        return _redirect_with_standalone(request, 'role_list')
     return render(request, 'core/role_confirm_delete.html', {'role': role})
 
 
@@ -749,7 +779,7 @@ def utilisateur_create(request):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Utilisateur ajouté avec succès.')
-        return redirect('utilisateur_list')
+        return _redirect_with_standalone(request, 'utilisateur_list')
     return render(request, 'core/utilisateur_form.html', {'form': form, 'title': 'Ajouter un utilisateur'})
 
 
@@ -762,7 +792,7 @@ def utilisateur_update(request, pk):
         # Vider le cache permissions si le rôle a changé
         clear_permissions_cache(utilisateur.user_id)
         messages.success(request, 'Utilisateur modifié avec succès.')
-        return redirect('utilisateur_list')
+        return _redirect_with_standalone(request, 'utilisateur_list')
     return render(request, 'core/utilisateur_form.html', {'form': form, 'title': 'Modifier l\'utilisateur'})
 
 
@@ -773,7 +803,7 @@ def utilisateur_delete(request, pk):
         clear_permissions_cache(utilisateur.user_id)
         utilisateur.delete()
         messages.success(request, 'Utilisateur supprimé avec succès.')
-        return redirect('utilisateur_list')
+        return _redirect_with_standalone(request, 'utilisateur_list')
     return render(request, 'core/utilisateur_confirm_delete.html', {'utilisateur': utilisateur})
 
 
@@ -859,7 +889,7 @@ def ecriture_delete(request, pk):
 
 @permission_required('stock_voir')
 def mouvement_list(request):
-    mouvements = MouvementStock.objects.select_related('produit', 'agence').all()
+    mouvements = MouvementStock.objects.select_related('produit', 'agence', 'agence_destination', 'utilisateur').all()
     return render(request, 'core/mouvement_list.html', {'mouvements': mouvements})
 
 
@@ -867,13 +897,46 @@ def mouvement_list(request):
 def mouvement_create(request):
     form = MouvementStockForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        mouvement = form.save()
-        produit = mouvement.produit
+        mouvement = form.save(commit=False)
+        mouvement.utilisateur = request.user
+        mouvement.save()
+
+        stock_source, _ = Stock.objects.get_or_create(
+            produit=mouvement.produit,
+            agence=mouvement.agence,
+            defaults={
+                'quantite_disponible': 0,
+                'quantite_reservee': 0,
+                'valeur_stock': 0,
+            },
+        )
+
         if mouvement.type_mouvement == 'entree':
-            produit.quantite_stock += mouvement.quantite
+            stock_source.quantite_disponible += mouvement.quantite
         elif mouvement.type_mouvement == 'sortie':
-            produit.quantite_stock = max(0, produit.quantite_stock - mouvement.quantite)
-        produit.save()
+            stock_source.quantite_disponible = max(0, stock_source.quantite_disponible - mouvement.quantite)
+        elif mouvement.type_mouvement in ['ajustement', 'inventaire']:
+            stock_source.quantite_disponible = max(0, mouvement.quantite)
+        elif mouvement.type_mouvement == 'transfert' and mouvement.agence_destination:
+            stock_source.quantite_disponible = max(0, stock_source.quantite_disponible - mouvement.quantite)
+            stock_destination, _ = Stock.objects.get_or_create(
+                produit=mouvement.produit,
+                agence=mouvement.agence_destination,
+                defaults={
+                    'quantite_disponible': 0,
+                    'quantite_reservee': 0,
+                    'valeur_stock': 0,
+                },
+            )
+            stock_destination.quantite_disponible += mouvement.quantite
+            stock_destination.valeur_stock = stock_destination.quantite_disponible * (mouvement.prix_unitaire or mouvement.produit.prix_achat_ht or 0)
+            stock_destination.date_dernier_mouvement = mouvement.date_mouvement
+            stock_destination.save()
+
+        stock_source.valeur_stock = stock_source.quantite_disponible * (mouvement.prix_unitaire or mouvement.produit.prix_achat_ht or 0)
+        stock_source.date_dernier_mouvement = mouvement.date_mouvement
+        stock_source.save()
+
         messages.success(request, 'Mouvement ajouté avec succès.')
         return _redirect_with_standalone(request, 'mouvement_list')
     return render(request, 'core/mouvement_form.html', {'form': form, 'title': 'Ajouter un mouvement'})
@@ -948,7 +1011,7 @@ def role_permissions(request, pk):
             permission = get_object_or_404(AppPermission, pk=perm_id)
             RolePermission.objects.create(role=role, permission=permission)
         messages.success(request, 'Permissions mises à jour avec succès.')
-        return redirect('role_list')
+        return _redirect_with_standalone(request, 'role_list')
     
     # Récupérer les permissions actuelles
     current_permissions = RolePermission.objects.filter(role=role).values_list('permission_id', flat=True)
