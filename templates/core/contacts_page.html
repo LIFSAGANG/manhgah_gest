@@ -166,35 +166,30 @@
     <div class="nav-left">
       <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Accueil</a>
       <div class="nav-btn-group" style="display: flex; gap: 10px;">
-        <a href="#" class="btn nav-btn active" id="btn-societes" data-section="societes" onclick="loadContent(event, '{% url 'societe_list' %}?standalone=1&embed=1&from_parametres=1')">Sociétés</a>
-        
-        <div class="dropdown">
-          <button class="btn nav-btn dropdown-toggle" id="btn-utilisateurs" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-section="utilisateurs">
-            Utilisateurs
-          </button>
-          <ul class="dropdown-menu" aria-labelledby="btn-utilisateurs">
-            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'utilisateur_list' %}?standalone=1&embed=1&from_parametres=1'); setActiveButton('utilisateurs');">Liste des utilisateurs</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'role_list' %}?standalone=1&embed=1&from_parametres=1'); setActiveButton('utilisateurs');">Rôles</a></li>
-          </ul>
-        </div>
+        <a href="#" class="btn nav-btn active" id="btn-clients" data-section="clients" onclick="loadContent(event, '{% url 'client_list' %}?standalone=1&embed=1&from_contacts=1')">Clients</a>
+        <a href="#" class="btn nav-btn" id="btn-fournisseurs" data-section="fournisseurs" onclick="loadContent(event, '{% url 'fournisseur_list' %}?standalone=1&embed=1&from_contacts=1')">Fournisseurs</a>
       </div>
     </div>
 
     <div class="nav-right">
       <div class="user-info">
-        <i class="fa-solid fa-user-circle"></i>
-        <span>{{ user.username }}</span>
+        <span>{{ request.user.get_full_name|default:request.user.username }}</span>
       </div>
       <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">Déconnexion</a>
     </div>
   </div>
+
+  <main class="container-fluid" id="param-content">
+    <iframe id="contacts-iframe" style="border: none; width: 100%; height: calc(100vh - 70px);" src="{% url 'client_list' %}?standalone=1&embed=1&from_contacts=1"></iframe>
+  </main>
 
   <script>
     function loadContent(event, url) {
       if (event) {
         event.preventDefault();
       }
-      const iframe = document.querySelector('#param-content iframe');
+      
+      const iframe = document.getElementById('contacts-iframe');
       if (iframe) {
         iframe.src = url;
       }
@@ -217,20 +212,12 @@
     }
 
     // Lors du clic sur les boutons de navigation
-    document.querySelectorAll('.nav-btn-group .nav-btn:not(.dropdown-toggle)').forEach(btn => {
+    document.querySelectorAll('.nav-btn-group .nav-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         const section = this.getAttribute('data-section');
         setActiveButton(section);
       });
     });
-
-    // Gérer le dropdown button
-    const userDropdownBtn = document.getElementById('btn-utilisateurs');
-    if (userDropdownBtn) {
-      userDropdownBtn.addEventListener('click', function() {
-        setActiveButton('utilisateurs');
-      });
-    }
 
     // Intercepter les messages du iframe
     window.addEventListener('message', function(event) {
@@ -248,31 +235,19 @@
       if (!href || href === '#') return;
 
       // Vérifier si c'est un lien d'édition, création, suppression ou agences
-      const isEditLink = /\/(societes|utilisateurs|roles|agences)\/(.+\/)?(ajouter|modifier|supprimer|permissions)\//.test(href) ||
-                         /\/(societes|utilisateurs|roles|agences)\/ajouter\//.test(href) ||
-                         /\/(societes|utilisateurs|roles|agences)\/\d+\/(modifier|supprimer|permissions)\//.test(href) ||
-                         /\/(agences)\/\?/.test(href);
-
-      if (isEditLink && !href.includes('standalone=1')) {
+      if (href.includes('/modifier/') || href.includes('/ajouter/') || href.includes('/supprimer/') || href.includes('/contacts=')) {
         e.preventDefault();
-        e.stopPropagation();
-
-        // Ajouter les paramètres standalone et embed
-        const separator = href.includes('?') ? '&' : '?';
-        const newUrl = href + separator + 'standalone=1&embed=1&from_parametres=1';
-        loadContent(null, newUrl);
+        
+        // Préserver les paramètres embed et from_contacts
+        let finalUrl = href;
+        if (!href.includes('?')) {
+          finalUrl += '?embed=1&from_contacts=1';
+        } else {
+          finalUrl += '&embed=1&from_contacts=1';
+        }
+        
+        loadContent(null, finalUrl);
       }
-    }, true);
+    });
   </script>
 {% endblock %}
-{% block content %}
-  <div class="standalone-page">
-    <div class="standalone-surface">
-      <div id="param-content">
-        <!-- Le contenu sera chargé ici par défaut (sociétés) -->
-        <iframe src="{% url 'societe_list' %}?standalone=1&embed=1&from_parametres=1" style="display:block; width:100%; height:calc(100vh - 100px); min-height:600px; border:none; border-radius:0;"></iframe>
-      </div>
-    </div>
-  </div>
-{% endblock %}
-
