@@ -182,6 +182,25 @@
           font-weight: 600;
         }
 
+        .value-cell,
+        .value-field,
+        .table td.text-end,
+        .table th.text-end,
+        .kpi-value {
+          font-variant-numeric: tabular-nums;
+        }
+
+        input.value-field,
+        .value-field input,
+        input[id*="montant"],
+        input[id*="prix"],
+        input[id*="debit"],
+        input[id*="credit"],
+        input[id*="solde"],
+        input[id*="limite_credit"] {
+          text-align: right;
+        }
+
         @media (max-width: 768px) {
           body.standalone-layout main.container-fluid {
             margin: 10px auto !important;
@@ -286,7 +305,93 @@
     </footer>
     {% endif %}
 
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteConfirmModalLabel">Confirmation de suppression</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+          </div>
+          <div class="modal-body" id="deleteConfirmModalMessage">
+            Voulez-vous vraiment supprimer cet élément ?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteActionBtn">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      (function () {
+        let pendingDeleteUrl = null;
+        const modalElement = document.getElementById('deleteConfirmModal');
+        const messageElement = document.getElementById('deleteConfirmModalMessage');
+        const confirmBtn = document.getElementById('confirmDeleteActionBtn');
+        const defaultConfirmText = confirmBtn ? confirmBtn.textContent : 'Supprimer';
+        if (!modalElement || !confirmBtn || typeof bootstrap === 'undefined') {
+          return;
+        }
+
+        const deleteModal = new bootstrap.Modal(modalElement);
+
+        function getCookie(name) {
+          const cookieValue = `; ${document.cookie}`;
+          const parts = cookieValue.split(`; ${name}=`);
+          if (parts.length === 2) {
+            return parts.pop().split(';').shift();
+          }
+          return null;
+        }
+
+        document.addEventListener('click', function (e) {
+          const link = e.target.closest('a.js-delete-link');
+          if (!link) {
+            return;
+          }
+          e.preventDefault();
+          pendingDeleteUrl = link.href;
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = defaultConfirmText;
+          if (messageElement) {
+            messageElement.textContent = link.dataset.deleteMessage || 'Voulez-vous vraiment supprimer cet élément ?';
+          }
+          deleteModal.show();
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+          pendingDeleteUrl = null;
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = defaultConfirmText;
+        });
+
+        confirmBtn.addEventListener('click', function () {
+          if (!pendingDeleteUrl) {
+            return;
+          }
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = 'Suppression...';
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = pendingDeleteUrl;
+
+          const csrfToken = getCookie('csrftoken');
+          if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+          }
+
+          document.body.appendChild(form);
+          form.submit();
+        });
+      })();
+    </script>
     
     {% if request.GET.from_parametres == '1' %}
     <script>
@@ -297,12 +402,13 @@
 
         const href = link.getAttribute('href');
         if (!href || href === '#' || href.startsWith('javascript')) return;
+        if (link.classList.contains('js-delete-link')) return;
 
         // Vérifier si c'est un lien d'édition, création, suppression ou navigation
-        const isEditLink = /\/(societes|utilisateurs|roles|agences)\/(.+\/)?(ajouter|modifier|supprimer|permissions)\//.test(href) ||
-                           /\/(societes|utilisateurs|roles|agences)\/ajouter\//.test(href) ||
-                           /\/(societes|utilisateurs|roles|agences)\/\d+\/(modifier|supprimer|permissions)\//.test(href) ||
-                           /\/(agences)\/\?/.test(href);
+        const isEditLink = /\/(societes|utilisateurs|roles|agences|projets|marches)\/(.+\/)?(ajouter|modifier|supprimer|permissions)\//.test(href) ||
+               /\/(societes|utilisateurs|roles|agences|projets|marches)\/ajouter\//.test(href) ||
+               /\/(societes|utilisateurs|roles|agences|projets|marches)\/\d+\/(modifier|supprimer|permissions)\//.test(href) ||
+               /\/(agences)\/\?/.test(href);
 
         if (isEditLink) {
           e.preventDefault();
@@ -313,6 +419,38 @@
           const newUrl = href + separator + 'standalone=1&embed=1&from_parametres=1';
           
           // Charger la page dans l'iframe parent
+          if (window.parent !== window) {
+            window.parent.postMessage({
+              type: 'loadContent',
+              url: newUrl
+            }, '*');
+          }
+        }
+      }, true);
+    </script>
+    {% endif %}
+
+    {% if request.GET.from_comptabilite == '1' %}
+    <script>
+      document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+        if (!href || href === '#' || href.startsWith('javascript')) return;
+        if (link.classList.contains('js-delete-link')) return;
+
+         const isEditLink = /\/(journaux|ecritures|comptabilite\/caisses|comptabilite\/banque|comptabilite\/plan-comptable|comptabilite\/lignes-ecriture)\/(.+\/)?(ajouter|modifier|supprimer)\//.test(href) ||
+           /\/(journaux|ecritures|comptabilite\/caisses|comptabilite\/banque|comptabilite\/plan-comptable|comptabilite\/lignes-ecriture)\/ajouter\//.test(href) ||
+           /\/(journaux|ecritures|comptabilite\/caisses|comptabilite\/banque|comptabilite\/plan-comptable|comptabilite\/lignes-ecriture)\/\d+\/(modifier|supprimer)\//.test(href);
+
+        if (isEditLink) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const separator = href.includes('?') ? '&' : '?';
+          const newUrl = href + separator + 'standalone=1&embed=1&from_comptabilite=1';
+
           if (window.parent !== window) {
             window.parent.postMessage({
               type: 'loadContent',

@@ -1,11 +1,12 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="standalone-page">
     <div class="standalone-surface">
       <div class="standalone-head">
         <div>
           <h2>ETATS Tiers</h2>
-          <p class="text-muted mb-0">Clients et fournisseurs par montant</p>
+          <p class="text-muted mb-0">Mouvements tiers selon les écritures comptables enregistrées</p>
         </div>
         <div class="standalone-tools">
           <a href="{% url 'comptabilite_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary">Retour</a>
@@ -15,11 +16,11 @@
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-label">Clients</div>
-          <div class="kpi-value">{{ top_clients|length }}</div>
+          <div class="kpi-value">{{ top_clients|length|format_amount:0 }}</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Fournisseurs</div>
-          <div class="kpi-value">{{ top_fournisseurs|length }}</div>
+          <div class="kpi-value">{{ top_fournisseurs|length|format_amount:0 }}</div>
         </div>
       </div>
 
@@ -29,20 +30,36 @@
             <thead>
               <tr>
                 <th>Client</th>
-                <th class="text-end">Nombre factures</th>
-                <th class="text-end">Total</th>
+                <th class="text-end">Écritures</th>
+                <th class="text-end">Débits</th>
+                <th class="text-end">Crédits</th>
+                <th class="text-end">Solde</th>
+                <th style="width: 120px;"></th>
               </tr>
             </thead>
             <tbody>
               {% for ligne in top_clients %}
                 <tr>
-                  <td>{{ ligne.client__nom }}</td>
-                  <td class="text-end">{{ ligne.nombre }}</td>
-                  <td class="text-end">{{ ligne.total|default:0|floatformat:2 }}</td>
+                  <td>{{ ligne.ecriture__client__raison_sociale|default:'-' }}</td>
+                  <td class="text-end">{{ ligne.nombre_ecritures|format_amount:0 }}</td>
+                  <td class="text-end">{{ ligne.total_debit|default:0|format_amount }}</td>
+                  <td class="text-end">{{ ligne.total_credit|default:0|format_amount }}</td>
+                  <td class="text-end">
+                    {% if ligne.solde > 0 %}
+                      <span class="badge bg-danger-subtle text-danger">{{ ligne.solde|format_amount }}</span>
+                    {% elif ligne.solde < 0 %}
+                      <span class="badge bg-success-subtle text-success">{{ ligne.solde|format_amount }}</span>
+                    {% else %}
+                      <span class="badge bg-secondary-subtle text-secondary">0.00</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'ecriture_list' %}?standalone=1{% if ligne.ecriture__client__id %}&client={{ ligne.ecriture__client__id }}{% endif %}" class="btn btn-sm btn-outline-primary">Détails</a>
+                  </td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="3" class="empty-state">Aucune donnee client.</td>
+                  <td colspan="6" class="empty-state">Aucune écriture client.</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -56,20 +73,36 @@
             <thead>
               <tr>
                 <th>Fournisseur</th>
-                <th class="text-end">Nombre achats</th>
-                <th class="text-end">Total</th>
+                <th class="text-end">Écritures</th>
+                <th class="text-end">Débits</th>
+                <th class="text-end">Crédits</th>
+                <th class="text-end">Solde</th>
+                <th style="width: 120px;"></th>
               </tr>
             </thead>
             <tbody>
               {% for ligne in top_fournisseurs %}
                 <tr>
-                  <td>{{ ligne.fournisseur__nom }}</td>
-                  <td class="text-end">{{ ligne.nombre }}</td>
-                  <td class="text-end">{{ ligne.total|default:0|floatformat:2 }}</td>
+                  <td>{{ ligne.ecriture__fournisseur__raison_sociale|default:'-' }}</td>
+                  <td class="text-end">{{ ligne.nombre_ecritures|format_amount:0 }}</td>
+                  <td class="text-end">{{ ligne.total_debit|default:0|format_amount }}</td>
+                  <td class="text-end">{{ ligne.total_credit|default:0|format_amount }}</td>
+                  <td class="text-end">
+                    {% if ligne.solde > 0 %}
+                      <span class="badge bg-danger-subtle text-danger">{{ ligne.solde|format_amount }}</span>
+                    {% elif ligne.solde < 0 %}
+                      <span class="badge bg-success-subtle text-success">{{ ligne.solde|format_amount }}</span>
+                    {% else %}
+                      <span class="badge bg-secondary-subtle text-secondary">0.00</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'ecriture_list' %}?standalone=1{% if ligne.ecriture__fournisseur__id %}&fournisseur={{ ligne.ecriture__fournisseur__id }}{% endif %}" class="btn btn-sm btn-outline-primary">Détails</a>
+                  </td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="3" class="empty-state">Aucune donnee fournisseur.</td>
+                  <td colspan="6" class="empty-state">Aucune écriture fournisseur.</td>
                 </tr>
               {% endfor %}
             </tbody>

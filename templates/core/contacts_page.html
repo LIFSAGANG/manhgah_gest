@@ -34,6 +34,8 @@
       display: flex;
       gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .contacts-nav .user-info {
@@ -44,13 +46,23 @@
       font-weight: 600;
     }
 
+    .contacts-nav .societe-filter {
+      display: flex;
+      align-items: center;
+    }
+
+    .contacts-nav .societe-filter select {
+      min-width: 220px;
+    }
+
     body.standalone-layout main.container-fluid {
       margin-top: 0 !important;
-      padding-top: 130px !important;
+      padding-top: 128px !important;
     }
 
     .contacts-nav {
-      height: 65px;
+      min-height: 78px;
+      height: auto;
     }
 
     .contacts-nav .btn {
@@ -147,7 +159,7 @@
 
     /* Assurer que l'iframe prend toute la hauteur disponible */
     #param-content iframe {
-      height: calc(100vh - 70px) !important;
+      height: calc(100vh - 86px) !important;
       margin-top: 0 !important;
       width: 100% !important;
       display: block !important;
@@ -172,6 +184,13 @@
     </div>
 
     <div class="nav-right">
+      <div class="societe-filter">
+        <select id="contacts-societe-select" class="form-select form-select-sm" onchange="onSocieteChange()">
+          {% for societe in societes %}
+            <option value="{{ societe.id }}" {% if selected_societe_id == societe.id %}selected{% endif %}>{{ societe.raison_sociale }}</option>
+          {% endfor %}
+        </select>
+      </div>
       <div class="user-info">
         <span>{{ request.user.get_full_name|default:request.user.username }}</span>
       </div>
@@ -180,10 +199,22 @@
   </div>
 
   <main class="container-fluid" id="param-content">
-    <iframe id="contacts-iframe" style="border: none; width: 100%; height: calc(100vh - 70px);" src="{% url 'client_list' %}?standalone=1&embed=1&from_contacts=1"></iframe>
+    <iframe id="contacts-iframe" style="border: none; width: 100%; height: calc(100vh - 86px);" src="{% url 'client_list' %}?standalone=1&embed=1&from_contacts=1{% if selected_societe_id %}&societe={{ selected_societe_id }}{% endif %}"></iframe>
   </main>
 
   <script>
+    function withSociete(url) {
+      const select = document.getElementById('contacts-societe-select');
+      if (!select || !select.value) {
+        return url;
+      }
+      const separator = url.includes('?') ? '&' : '?';
+      if (url.includes('societe=')) {
+        return url;
+      }
+      return `${url}${separator}societe=${encodeURIComponent(select.value)}`;
+    }
+
     function loadContent(event, url) {
       if (event) {
         event.preventDefault();
@@ -191,8 +222,17 @@
       
       const iframe = document.getElementById('contacts-iframe');
       if (iframe) {
-        iframe.src = url;
+        iframe.src = withSociete(url);
       }
+    }
+
+    function onSocieteChange() {
+      const active = document.querySelector('.nav-btn-group .nav-btn.active');
+      if (active && active.id === 'btn-fournisseurs') {
+        loadContent(null, "{% url 'fournisseur_list' %}?standalone=1&embed=1&from_contacts=1");
+        return;
+      }
+      loadContent(null, "{% url 'client_list' %}?standalone=1&embed=1&from_contacts=1");
     }
 
     function setActiveButton(section) {
@@ -245,6 +285,7 @@
         } else {
           finalUrl += '&embed=1&from_contacts=1';
         }
+        finalUrl = withSociete(finalUrl);
         
         loadContent(null, finalUrl);
       }

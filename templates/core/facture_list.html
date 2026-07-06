@@ -1,15 +1,16 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="standalone-page">
     <div class="standalone-surface">
       <div class="standalone-head">
         <div>
-          <h2>Factures</h2>
-          <p class="text-muted mb-0">Liste des factures clients</p>
+          <h2>Ventes</h2>
+          <p class="text-muted mb-0">Liste des ventes clients</p>
         </div>
         <div class="standalone-tools">
           {% if '__all__' in user_perms or 'facture_ajouter' in user_perms %}
-          <a href="{% url 'facture_create' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-primary">Ajouter une facture</a>
+          <a href="{% url 'facture_create' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_ventes == '1' %}&from_ventes=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-primary">Ajouter une vente</a>
           {% endif %}
         </div>
       </div>
@@ -19,10 +20,14 @@
           <table class="table table-striped table-hover align-middle">
             <thead>
               <tr>
-                <th>Référence</th>
+                <th>N° vente</th>
+                <th>Société</th>
+                <th>Agence</th>
                 <th>Client</th>
                 <th>Date</th>
-                <th>Montant</th>
+                <th>Type</th>
+                <th>Projet</th>
+                <th>Montant TTC</th>
                 <th>Statut</th>
                 <th></th>
               </tr>
@@ -30,23 +35,27 @@
             <tbody>
               {% for facture in factures %}
                 <tr>
-                  <td>{{ facture.reference }}</td>
-                  <td>{{ facture.client.nom }}</td>
-                  <td>{{ facture.date_emission }}</td>
-                  <td>{{ facture.montant_total }} FCFA</td>
-                  <td>{{ facture.get_statut_display }}</td>
+                  <td>{{ facture.numero_vente }}</td>
+                  <td>{{ facture.societe.raison_sociale }}</td>
+                  <td>{{ facture.agence.nom }}</td>
+                  <td>{{ facture.client.nom|default:'-' }}</td>
+                  <td>{{ facture.date_vente|date:'d/m/Y H:i' }}</td>
+                  <td>{{ facture.type_vente }}</td>
+                  <td>{{ facture.projet.code|default:'-' }}</td>
+                  <td class="text-end">{{ facture.montant_ttc|format_amount }} FCFA</td>
+                  <td>{{ facture.get_statut_vente_display }}</td>
                   <td class="text-end">
                     {% if '__all__' in user_perms or 'facture_modifier' in user_perms %}
-                    <a href="{% url 'facture_update' facture.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+                    <a href="{% url 'facture_update' facture.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_ventes == '1' %}&from_ventes=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
                     {% endif %}
                     {% if '__all__' in user_perms or 'facture_supprimer' in user_perms %}
-                    <a href="{% url 'facture_delete' facture.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                    <a href="{% url 'facture_delete' facture.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_ventes == '1' %}&from_ventes=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
                     {% endif %}
                   </td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6" class="empty-state">Aucune facture enregistrée.</td>
+                  <td colspan="10" class="empty-state">Aucune vente enregistrée.</td>
                 </tr>
               {% endfor %}
             </tbody>

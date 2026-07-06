@@ -14,7 +14,7 @@
       <h2>Fournisseurs</h2>
       <p class="text-muted mb-0">Liste des fournisseurs</p>
     </div>
-    <a href="{% url 'fournisseur_create' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% endif %}" class="btn btn-primary">Ajouter un fournisseur</a>
+    <a href="{% url 'fournisseur_create' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-primary">Ajouter un fournisseur</a>
   </div>
 
   <div class="table-responsive">
@@ -42,8 +42,8 @@
             <td>{{ fournisseur.ville }}</td>
             <td>{% if fournisseur.actif %}Oui{% else %}Non{% endif %}</td>
             <td class="text-end">
-              <a href="{% url 'fournisseur_update' fournisseur.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
-              <a href="{% url 'fournisseur_delete' fournisseur.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% endif %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+              <a href="{% url 'fournisseur_update' fournisseur.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+              <a href="{% url 'fournisseur_delete' fournisseur.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
             </td>
           </tr>
         {% empty %}

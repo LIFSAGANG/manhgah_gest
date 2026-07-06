@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="standalone-page">
     <div class="standalone-surface">
@@ -7,23 +8,25 @@
           <h2>Etat du stock</h2>
           <p class="text-muted mb-0">Vue globale de la situation actuelle</p>
         </div>
+        {% if request.GET.from_produits_stock != '1' %}
         <div class="standalone-tools">
-          <a href="{% url 'produits_stock_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary">Retour</a>
+          <a href="{% url 'produits_stock_page' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_produits_stock == '1' %}&from_produits_stock=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-secondary">Retour</a>
         </div>
+        {% endif %}
       </div>
 
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-label">Produits</div>
-          <div class="kpi-value">{{ total_produits }}</div>
+          <div class="kpi-value">{{ total_produits|format_amount:0 }}</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Quantité totale</div>
-          <div class="kpi-value">{{ total_quantite }}</div>
+          <div class="kpi-value">{{ total_quantite|format_amount:0 }}</div>
         </div>
         <div class="kpi-card is-danger">
           <div class="kpi-label">Produits en rupture</div>
-          <div class="kpi-value text-danger">{{ produits_rupture }}</div>
+          <div class="kpi-value text-danger">{{ produits_rupture|format_amount:0 }}</div>
         </div>
       </div>
 
@@ -45,7 +48,7 @@
                   <td>{{ produit.code_produit }}</td>
                   <td>{{ produit.nom_produit }}</td>
                   <td>{{ produit.categorie }}</td>
-                  <td class="text-end">{{ produit.quantite_stock_calculee }}</td>
+                  <td class="text-end">{{ produit.quantite_stock_calculee|format_amount:0 }}</td>
                   <td>
                     {% if produit.quantite_stock_calculee == 0 %}
                       <span class="badge bg-danger">Rupture</span>

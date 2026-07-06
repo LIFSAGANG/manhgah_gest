@@ -1,5 +1,65 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
+  <style>
+    .journal-menu-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .journal-menu-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: #fff;
+      text-decoration: none;
+      color: #0f172a;
+      min-width: 190px;
+      transition: all 0.2s ease;
+    }
+    .journal-menu-btn:hover {
+      border-color: #0f172a;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(2, 6, 23, 0.08);
+      color: #0f172a;
+    }
+    .journal-menu-btn.active {
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #fff;
+    }
+    .journal-menu-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+    .journal-menu-btn.active .journal-menu-icon {
+      background: rgba(255, 255, 255, 0.16) !important;
+      color: #fff !important;
+    }
+    .journal-menu-label {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+    .journal-menu-code {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .journal-menu-name {
+      font-size: 0.78rem;
+      opacity: 0.8;
+    }
+  </style>
+
   <div class="standalone-page">
     <div class="standalone-surface">
       <div class="standalone-head">
@@ -7,48 +67,149 @@
           <h2>Écritures Comptables</h2>
           <p class="text-muted mb-0">Enregistrements comptables</p>
         </div>
-        <div class="standalone-tools">
-          <a href="{% url 'ecriture_create' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-primary">Ajouter une écriture</a>
-          <a href="{% url 'comptabilite_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Retour</a>
-        </div>
+        {% if selected_journal_obj %}
+          <div class="standalone-tools">
+            <a href="{% url 'ecriture_create' %}?journal={{ selected_journal_obj.id }}{% if reset_query_string %}&{{ reset_query_string }}{% endif %}" class="btn btn-primary">
+              Ajouter une écriture ({{ selected_journal_obj.code }})
+            </a>
+          </div>
+        {% endif %}
       </div>
 
       <div class="standalone-table-card">
+        <div class="journal-menu-wrap">
+          <a href="{% url 'ecriture_list' %}{% if reset_query_string %}?{{ reset_query_string }}{% endif %}" class="journal-menu-btn {% if not selected_journal %}active{% endif %}">
+            <span class="journal-menu-icon bg-secondary-subtle text-secondary"><i class="fa-solid fa-layer-group"></i></span>
+            <span class="journal-menu-label">
+              <span class="journal-menu-code">Tous</span>
+              <span class="journal-menu-name">Tous les journaux</span>
+            </span>
+          </a>
+          {% for journal in journaux %}
+            <a href="{% url 'ecriture_list' %}?journal={{ journal.id }}{% if reset_query_string %}&{{ reset_query_string }}{% endif %}" class="journal-menu-btn {% if selected_journal == journal.id|stringformat:'s' %}active{% endif %}">
+              <span class="journal-menu-icon {% if journal.type_journal == 'Vente' %}bg-success-subtle text-success{% elif journal.type_journal == 'Achat' %}bg-danger-subtle text-danger{% elif journal.type_journal == 'Banque' %}bg-primary-subtle text-primary{% elif journal.type_journal == 'Caisse' %}bg-warning-subtle text-warning{% else %}bg-info-subtle text-info{% endif %}">
+                <i class="fa-solid {% if journal.type_journal == 'Vente' %}fa-cart-shopping{% elif journal.type_journal == 'Achat' %}fa-truck-ramp-box{% elif journal.type_journal == 'Banque' %}fa-building-columns{% elif journal.type_journal == 'Caisse' %}fa-cash-register{% else %}fa-book-open{% endif %}"></i>
+              </span>
+              <span class="journal-menu-label">
+                <span class="journal-menu-code">{{ journal.code }}</span>
+                <span class="journal-menu-name">{{ journal.nom }}</span>
+              </span>
+            </a>
+          {% endfor %}
+        </div>
+
+        <form method="get" class="row g-2 align-items-end mb-3">
+          {% if request.GET.standalone == '1' %}<input type="hidden" name="standalone" value="1">{% endif %}
+          {% if request.GET.embed == '1' %}<input type="hidden" name="embed" value="1">{% endif %}
+          {% if request.GET.from_comptabilite == '1' %}<input type="hidden" name="from_comptabilite" value="1">{% endif %}
+          {% if request.GET.societe %}<input type="hidden" name="societe" value="{{ request.GET.societe }}">{% endif %}
+
+          {% if selected_journal %}<input type="hidden" name="journal" value="{{ selected_journal }}">{% endif %}
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label mb-1">Date début</label>
+            <input type="date" name="date_debut" value="{{ date_debut }}" class="form-control form-control-sm">
+          </div>
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label mb-1">Date fin</label>
+            <input type="date" name="date_fin" value="{{ date_fin }}" class="form-control form-control-sm">
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label mb-1">État</label>
+            <select name="etat" class="form-select form-select-sm">
+              <option value="" {% if not etat %}selected{% endif %}>Tous</option>
+              <option value="equilibree" {% if etat == 'equilibree' %}selected{% endif %}>Équilibrée</option>
+              <option value="desequilibree" {% if etat == 'desequilibree' %}selected{% endif %}>Déséquilibrée</option>
+            </select>
+          </div>
+          <div class="col-lg-5 col-md-12 d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary">Filtrer</button>
+            <a href="{% url 'ecriture_list' %}{% if reset_query_string %}?{{ reset_query_string }}{% endif %}" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
+          </div>
+        </form>
+
         <div class="table-responsive">
-          <table class="table table-striped table-hover align-middle">
+          <table class="table table-striped table-hover table-sm align-middle">
             <thead>
               <tr>
+                <th>Société</th>
+                <th>Agence</th>
                 <th>Journal</th>
-                <th>Référence</th>
+                <th style="min-width: 140px;">Numéro</th>
                 <th>Date</th>
-                <th>Intitulé</th>
-                <th>Débit</th>
-                <th>Crédit</th>
-                <th></th>
+                <th>Code Tiers</th>
+                <th>Libellé</th>
+                <th class="text-end" style="min-width: 130px;">Débit</th>
+                <th class="text-end" style="min-width: 130px;">Crédit</th>
+                <th style="min-width: 110px;">État</th>
+                <th style="width: 170px;"></th>
               </tr>
             </thead>
             <tbody>
               {% for ecriture in ecritures %}
                 <tr>
+                  <td>{{ ecriture.societe.raison_sociale|default:'-' }}</td>
+                  <td>{{ ecriture.agence.nom|default:'-' }}</td>
                   <td>{{ ecriture.journal.nom }}</td>
-                  <td>{{ ecriture.reference }}</td>
+                  <td><span class="fw-semibold">{{ ecriture.numero_ecriture|default:ecriture.reference }}</span></td>
                   <td>{{ ecriture.date_ecriture|date:'d/m/Y' }}</td>
-                  <td>{{ ecriture.intitule }}</td>
-                  <td>{{ ecriture.debit }}</td>
-                  <td>{{ ecriture.credit }}</td>
+                  <td>
+                    {% if ecriture.client %}
+                      <span class="badge bg-primary-subtle text-primary">{{ ecriture.client.code|default:ecriture.client.code_client }}</span>
+                    {% elif ecriture.fournisseur %}
+                      <span class="badge bg-warning-subtle text-warning">{{ ecriture.fournisseur.code|default:ecriture.fournisseur.code_fournisseur }}</span>
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ ecriture.libelle_ecriture|default:ecriture.intitule }}</td>
+                  <td class="text-end">{{ ecriture.total_debit|default:0|format_amount }}</td>
+                  <td class="text-end">{{ ecriture.total_credit|default:0|format_amount }}</td>
+                  <td>
+                    {% if ecriture.total_debit|default:0 == ecriture.total_credit|default:0 %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">Équilibrée</span>
+                    {% else %}
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Déséquilibrée</span>
+                    {% endif %}
+                  </td>
                   <td class="text-end">
-                    <a href="{% url 'ecriture_update' ecriture.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
-                    <a href="{% url 'ecriture_delete' ecriture.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                    <a href="{% url 'ecriture_update' ecriture.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+                    <a href="{% url 'ecriture_delete' ecriture.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
                   </td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="7" class="empty-state">Aucune écriture enregistrée.</td>
+                  <td colspan="11" class="empty-state">Aucune écriture enregistrée.</td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
+
+        {% if is_paginated %}
+          <nav class="mt-3" aria-label="Pagination des écritures">
+            <ul class="pagination pagination-sm mb-0">
+              {% if page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}">Précédent</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">Précédent</span></li>
+              {% endif %}
+
+              <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+              </li>
+
+              {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}">Suivant</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">Suivant</span></li>
+              {% endif %}
+            </ul>
+          </nav>
+        {% endif %}
       </div>
     </div>
   </div>

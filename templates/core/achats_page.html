@@ -1,0 +1,147 @@
+{% extends 'core/base.html' %}
+{% block contacts_nav %}
+  <style>
+    .topbar { display: none !important; }
+    .contacts-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid rgba(229, 231, 235, 1);
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .contacts-nav .nav-left { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .contacts-nav .nav-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .contacts-nav .user-info { display: flex; align-items: center; gap: 8px; color: #0f172a; font-weight: 600; }
+    .contacts-nav .societe-filter select { min-width: 220px; }
+    body.standalone-layout main.container-fluid { margin-top: 0 !important; padding-top: 128px !important; }
+    .contacts-nav { min-height: 78px; height: auto; }
+    .nav-btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .nav-btn-group .btn {
+      background: transparent;
+      border: 1px solid #d1d5db;
+      color: #6b7280;
+      transition: all 0.3s ease;
+      min-width: 140px;
+    }
+    .nav-btn-group .btn:hover { color: #0f172a; border-color: #0f172a; }
+    .nav-btn-group .btn.active,
+    .nav-btn-group .dropdown .btn.active {
+      background: #0f172a !important;
+      border-color: #0f172a !important;
+      color: #fff !important;
+    }
+    .dropdown-menu { min-width: 240px; }
+    .dropdown-menu a { color: #0f172a; text-decoration: none; font-weight: 500; }
+    .dropdown-menu a:hover { background-color: #f0f0f0; color: #0f172a; }
+    #achats-content { height: 100%; overflow: hidden !important; }
+    #achats-content iframe { height: calc(100vh - 86px) !important; width: 100% !important; display: block !important; border: none; }
+    .standalone-page, .standalone-surface { overflow: visible !important; height: auto !important; max-height: none !important; }
+  </style>
+
+  <div class="contacts-nav px-3">
+    <div class="nav-left">
+      <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Accueil</a>
+      <div class="nav-btn-group">
+        <a href="#" class="btn nav-btn active" id="btn-facturation" data-section="facturation" onclick="loadContent(event, '{% url 'achat_list' %}?standalone=1&embed=1&from_achats=1')">Facturation</a>
+        <div class="dropdown">
+          <button class="btn nav-btn dropdown-toggle" type="button" id="btn-etat" data-bs-toggle="dropdown" aria-expanded="false">Etats</button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'etat_achats_page' %}?standalone=1&embed=1&from_achats=1'); setActiveButton('etat');">Etat des achats</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'etat_fournisseurs_achats_page' %}?standalone=1&embed=1&from_achats=1'); setActiveButton('etat');">Etat fournisseurs</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'declaration_fiscale_achats_page' %}?standalone=1&embed=1&from_achats=1'); setActiveButton('etat');">Déclaration fiscale</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'rapport_general_achats_page' %}?standalone=1&embed=1&from_achats=1'); setActiveButton('etat');">Rapport général</a></li>
+          </ul>
+        </div>
+        <a href="#" class="btn nav-btn" id="btn-tableau-bord" data-section="tableau-bord" onclick="loadContent(event, '{% url 'tableau_bord_achats_page' %}?standalone=1&embed=1&from_achats=1')">Tableau de bord</a>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <div class="societe-filter">
+        <select id="achats-societe-select" class="form-select form-select-sm" onchange="onSocieteChange()">
+          {% for societe in societes %}
+            <option value="{{ societe.id }}" {% if selected_societe_id == societe.id %}selected{% endif %}>{{ societe.raison_sociale }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="user-info">
+        <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+      </div>
+      <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">Déconnexion</a>
+    </div>
+  </div>
+
+  <main class="container-fluid" id="achats-content">
+    <iframe id="achats-iframe" src="{% url 'achat_list' %}?standalone=1&embed=1&from_achats=1{% if selected_societe_id %}&societe={{ selected_societe_id }}{% endif %}"></iframe>
+  </main>
+
+  <script>
+    function withSociete(url) {
+      const select = document.getElementById('achats-societe-select');
+      if (!select || !select.value || url.includes('societe=')) {
+        return url;
+      }
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}societe=${encodeURIComponent(select.value)}`;
+    }
+
+    function loadContent(event, url) {
+      if (event) {
+        event.preventDefault();
+      }
+      const iframe = document.getElementById('achats-iframe');
+      if (iframe) {
+        iframe.src = withSociete(url);
+      }
+    }
+
+    function setActiveButton(section) {
+      document.querySelectorAll('.nav-btn-group .nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.cssText = '';
+      });
+      const activeBtn = document.getElementById(`btn-${section}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.style.cssText = 'background: #0f172a !important; border-color: #0f172a !important; color: #fff !important;';
+      }
+    }
+
+    function onSocieteChange() {
+      const active = document.querySelector('.nav-btn-group .nav-btn.active');
+      if (active && active.id === 'btn-tableau-bord') {
+        loadContent(null, "{% url 'tableau_bord_achats_page' %}?standalone=1&embed=1&from_achats=1");
+        return;
+      }
+      if (active && active.id === 'btn-etat') {
+        loadContent(null, "{% url 'etat_achats_page' %}?standalone=1&embed=1&from_achats=1");
+        return;
+      }
+      loadContent(null, "{% url 'achat_list' %}?standalone=1&embed=1&from_achats=1");
+    }
+
+    document.querySelectorAll('.nav-btn-group .nav-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const section = this.getAttribute('data-section');
+        if (section) {
+          setActiveButton(section);
+        }
+      });
+    });
+
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'loadContent') {
+        loadContent(null, event.data.url);
+      }
+    });
+  </script>
+{% endblock %}

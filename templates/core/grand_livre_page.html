@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="standalone-page">
     <div class="standalone-surface">
@@ -6,9 +7,6 @@
         <div>
           <h2>Grand livres</h2>
           <p class="text-muted mb-0">Detail des ecritures par compte</p>
-        </div>
-        <div class="standalone-tools">
-          <a href="{% url 'comptabilite_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary">Retour</a>
         </div>
       </div>
 
@@ -20,6 +18,7 @@
                 <th>Compte</th>
                 <th>Date</th>
                 <th>Reference</th>
+                <th>Code Tiers</th>
                 <th>Intitule</th>
                 <th class="text-end">Debit</th>
                 <th class="text-end">Credit</th>
@@ -28,16 +27,25 @@
             <tbody>
               {% for ligne in lignes %}
                 <tr>
-                  <td>{{ ligne.compte }}</td>
-                  <td>{{ ligne.date_ecriture|date:'d/m/Y' }}</td>
-                  <td>{{ ligne.reference }}</td>
-                  <td>{{ ligne.intitule }}</td>
-                  <td class="text-end">{{ ligne.debit|floatformat:2 }}</td>
-                  <td class="text-end">{{ ligne.credit|floatformat:2 }}</td>
+                  <td>{{ ligne.compte.numero_compte }} - {{ ligne.compte.nom_compte }}</td>
+                  <td>{{ ligne.ecriture.date_ecriture|date:'d/m/Y' }}</td>
+                  <td>{{ ligne.ecriture.numero_ecriture|default:ligne.ecriture.reference }}</td>
+                  <td>
+                    {% if ligne.ecriture.client %}
+                      <span class="badge bg-primary-subtle text-primary">{{ ligne.ecriture.client.code|default:ligne.ecriture.client.code_client }}</span>
+                    {% elif ligne.ecriture.fournisseur %}
+                      <span class="badge bg-warning-subtle text-warning">{{ ligne.ecriture.fournisseur.code|default:ligne.ecriture.fournisseur.code_fournisseur }}</span>
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ ligne.ecriture.libelle_ecriture|default:ligne.ecriture.intitule }}</td>
+                  <td class="text-end">{{ ligne.debit|format_amount }}</td>
+                  <td class="text-end">{{ ligne.credit|format_amount }}</td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6" class="empty-state">Aucune ecriture disponible.</td>
+                  <td colspan="7" class="empty-state">Aucune ecriture disponible.</td>
                 </tr>
               {% endfor %}
             </tbody>

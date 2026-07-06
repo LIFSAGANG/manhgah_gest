@@ -7,6 +7,9 @@
           <h2 class="h4 mb-1">{{ title }}</h2>
           <p class="text-muted mb-0">Renseignez les informations du rôle.</p>
         </div>
+        <div class="standalone-tools">
+          <a href="{% url 'role_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
+        </div>
       </div>
 
       <div class="form-shell">

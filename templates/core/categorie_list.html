@@ -14,7 +14,7 @@
           <p class="text-muted mb-0">Catégories de produits</p>
         </div>
         <div class="standalone-tools">
-          <a href="{% url 'categorie_create' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-primary">Ajouter une catégorie</a>
+          <a href="{% url 'categorie_create' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_produits_stock == '1' %}&from_produits_stock=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-primary">Ajouter une catégorie</a>
 
         </div>
       </div>
@@ -41,8 +41,8 @@
                   <td>{{ categorie.description|truncatewords:3 }}</td>
                   <td>{% if categorie.actif %}Oui{% else %}Non{% endif %}</td>
                   <td class="text-end">
-                    <a href="{% url 'categorie_update' categorie.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
-                    <a href="{% url 'categorie_delete' categorie.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                    <a href="{% url 'categorie_update' categorie.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_produits_stock == '1' %}&from_produits_stock=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+                    <a href="{% url 'categorie_delete' categorie.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_produits_stock == '1' %}&from_produits_stock=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
                   </td>
                 </tr>
               {% empty %}

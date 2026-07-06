@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+{% load number_format %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2>Banque</h2>
+          <p class="text-muted mb-0">Gestion des comptes bancaires et derniers mouvements.</p>
+        </div>
+        <div class="standalone-tools">
+          <a href="{% url 'banque_create' %}?standalone=1&embed=1&from_comptabilite=1{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}" class="btn btn-primary me-2">Ajouter une banque</a>
+          <a href="{% url 'mouvement_banque_create' %}?standalone=1&embed=1&from_comptabilite=1{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}" class="btn btn-outline-primary">Nouveau mouvement</a>
+        </div>
+      </div>
+
+      <div class="standalone-table-card mb-4">
+        <h3 class="h6 mb-3">Comptes bancaires</h3>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Agence</th>
+                <th>Solde initial</th>
+                <th>Solde actuel</th>
+                <th>Responsable</th>
+                <th>Actif</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for banque in banques %}
+                <tr>
+                  <td>{{ banque.code_banque }}</td>
+                  <td>{{ banque.nom_banque }}</td>
+                  <td>{{ banque.agence.nom }}</td>
+                  <td class="text-end">{{ banque.solde_initial|format_amount }}</td>
+                  <td class="text-end">{{ banque.solde_actuel|format_amount }}</td>
+                  <td>{{ banque.responsable.nom_utilisateur|default:'-' }}</td>
+                  <td>{% if banque.actif %}Oui{% else %}Non{% endif %}</td>
+                  <td class="text-end">
+                    <a href="{% url 'banque_update' banque.pk %}?standalone=1&embed=1&from_comptabilite=1{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+                    <a href="{% url 'banque_delete' banque.pk %}?standalone=1&embed=1&from_comptabilite=1{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="8" class="empty-state">Aucune banque enregistrée.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="standalone-table-card">
+        <h3 class="h6 mb-3">Derniers mouvements bancaires</h3>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Banque</th>
+                <th>Type</th>
+                <th>Montant</th>
+                <th>Référence</th>
+                <th>Utilisateur</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for mvt in mouvements %}
+                <tr>
+                  <td>{{ mvt.date_mouvement|date:'d/m/Y H:i' }}</td>
+                  <td>{{ mvt.banque.nom_banque }}</td>
+                  <td>{{ mvt.type_mouvement }}</td>
+                  <td class="text-end">{{ mvt.montant|format_amount }}</td>
+                  <td>{{ mvt.reference|default:'-' }}</td>
+                  <td>{{ mvt.utilisateur.nom_utilisateur|default:'-' }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="empty-state">Aucun mouvement bancaire.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -8,7 +8,7 @@
           <p class="text-muted mb-0">Renseignez les informations du client.</p>
         </div>
         <div class="standalone-tools">
-        <a href="{% url 'client_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
+        <a href="{% url 'client_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
         </div>
       </div>
 
@@ -16,10 +16,7 @@
         <form method="post">
           {% csrf_token %}
           <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Société</label>
-              {{ form.societe }}
-            </div>
+            {{ form.societe }}
             <div class="col-md-6">
               <label class="form-label">Code client</label>
               {{ form.code_client }}
@@ -85,7 +82,7 @@
           </div>
           <div class="mt-4">
             <button type="submit" class="btn btn-success">Enregistrer</button>
-            <a href="{% url 'client_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
+            <a href="{% url 'client_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
           </div>
         </form>
       </div>

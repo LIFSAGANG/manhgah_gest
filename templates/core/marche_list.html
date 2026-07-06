@@ -1,0 +1,34 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2>Marchés</h2>
+          <p class="text-muted mb-0">Liste des marchés (structure prête)</p>
+        </div>
+      </div>
+
+      <div class="standalone-table-card">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Libellé</th>
+                <th>Société</th>
+                <th>Agence</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="empty-state">Aucun marché enregistré pour le moment.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

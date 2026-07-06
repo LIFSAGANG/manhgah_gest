@@ -1,0 +1,126 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2>Comptabilisation</h2>
+          <p class="text-muted mb-0">Gestion des règles de saisie, options de saisie et annulation des écritures comptables.</p>
+          {% if selected_societe %}
+            <small class="text-muted">Société: {{ selected_societe.raison_sociale }}</small>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if form %}
+        <form method="post" class="form-shell">
+          {% csrf_token %}
+
+          <div class="standalone-table-card mb-3">
+            <h5 class="mb-3">Règles de saisie</h5>
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <div class="form-check">
+                  {{ form.equilibre_obligatoire }}
+                  <label class="form-check-label" for="{{ form.equilibre_obligatoire.id_for_label }}">{{ form.equilibre_obligatoire.label }}</label>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="form-check">
+                  {{ form.numerotation_auto }}
+                  <label class="form-check-label" for="{{ form.numerotation_auto.id_for_label }}">{{ form.numerotation_auto.label }}</label>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="form-check">
+                  {{ form.verrouillage_periode }}
+                  <label class="form-check-label" for="{{ form.verrouillage_periode.id_for_label }}">{{ form.verrouillage_periode.label }}</label>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label" for="{{ form.type_numerotation.id_for_label }}">{{ form.type_numerotation.label }}</label>
+                {{ form.type_numerotation }}
+              </div>
+            </div>
+          </div>
+
+          <div class="standalone-table-card mb-3">
+            <h5 class="mb-3">Options de saisie</h5>
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <label class="form-label" for="{{ form.journal_defaut.id_for_label }}">{{ form.journal_defaut.label }}</label>
+                {{ form.journal_defaut }}
+                {% if form.journal_defaut.errors %}
+                  <div class="invalid-feedback d-block">{{ form.journal_defaut.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label" for="{{ form.compte_tiers_client.id_for_label }}">{{ form.compte_tiers_client.label }}</label>
+                {{ form.compte_tiers_client }}
+                {% if form.compte_tiers_client.errors %}
+                  <div class="invalid-feedback d-block">{{ form.compte_tiers_client.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label" for="{{ form.compte_tiers_fournisseur.id_for_label }}">{{ form.compte_tiers_fournisseur.label }}</label>
+                {{ form.compte_tiers_fournisseur }}
+                {% if form.compte_tiers_fournisseur.errors %}
+                  <div class="invalid-feedback d-block">{{ form.compte_tiers_fournisseur.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label" for="{{ form.racine_numero_ecriture.id_for_label }}">{{ form.racine_numero_ecriture.label }}</label>
+                {{ form.racine_numero_ecriture }}
+                {% if form.racine_numero_ecriture.errors %}
+                  <div class="invalid-feedback d-block">{{ form.racine_numero_ecriture.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-lg-6 d-flex align-items-end">
+                <div class="form-check">
+                  {{ form.champs_facultatifs_actifs }}
+                  <label class="form-check-label" for="{{ form.champs_facultatifs_actifs.id_for_label }}">{{ form.champs_facultatifs_actifs.label }}</label>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="form-check">
+                  {{ form.modeles_recurrents_actifs }}
+                  <label class="form-check-label" for="{{ form.modeles_recurrents_actifs.id_for_label }}">{{ form.modeles_recurrents_actifs.label }}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="standalone-table-card mb-3">
+            <h5 class="mb-3">Annulation des écritures</h5>
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <label class="form-label" for="{{ form.mode_annulation.id_for_label }}">{{ form.mode_annulation.label }}</label>
+                {{ form.mode_annulation }}
+              </div>
+              <div class="col-lg-6 d-flex align-items-end">
+                <div class="form-check">
+                  {{ form.motif_annulation_obligatoire }}
+                  <label class="form-check-label" for="{{ form.motif_annulation_obligatoire.id_for_label }}">{{ form.motif_annulation_obligatoire.label }}</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="{{ form.roles_autorises_annulation.id_for_label }}">{{ form.roles_autorises_annulation.label }}</label>
+                {{ form.roles_autorises_annulation }}
+              </div>
+            </div>
+          </div>
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <div class="mt-3">
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+          </div>
+        </form>
+      {% else %}
+        <div class="alert alert-warning mb-0">Aucune société disponible pour configurer la comptabilisation.</div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

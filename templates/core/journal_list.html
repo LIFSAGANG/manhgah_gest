@@ -8,8 +8,7 @@
           <p class="text-muted mb-0">Gestion des journaux comptables</p>
         </div>
         <div class="standalone-tools">
-          <a href="{% url 'journal_create' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-primary">Ajouter un journal</a>
-          <a href="{% url 'comptabilite_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Retour</a>
+          <a href="{% url 'journal_create' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-primary">Ajouter un journal</a>
         </div>
       </div>
 
@@ -21,6 +20,7 @@
                 <th>Société</th>
                 <th>Code</th>
                 <th>Nom</th>
+                <th>Type</th>
                 <th>Description</th>
                 <th></th>
               </tr>
@@ -28,18 +28,19 @@
             <tbody>
               {% for journal in journaux %}
                 <tr>
-                  <td>{{ journal.societe.nom }}</td>
+                  <td>{{ journal.societe.raison_sociale }}</td>
                   <td>{{ journal.code }}</td>
                   <td>{{ journal.nom }}</td>
+                  <td>{{ journal.type_journal }}</td>
                   <td>{{ journal.description|truncatewords:3 }}</td>
                   <td class="text-end">
-                    <a href="{% url 'journal_update' journal.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
-                    <a href="{% url 'journal_delete' journal.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                    <a href="{% url 'journal_update' journal.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+                    <a href="{% url 'journal_delete' journal.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
                   </td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="5" class="empty-state">Aucun journal enregistré.</td>
+                  <td colspan="6" class="empty-state">Aucun journal enregistré.</td>
                 </tr>
               {% endfor %}
             </tbody>

@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="standalone-page">
     <div class="standalone-surface">
@@ -6,9 +7,6 @@
         <div>
           <h2>Etat des journaux</h2>
           <p class="text-muted mb-0">Totaux debit et credit par journal</p>
-        </div>
-        <div class="standalone-tools">
-          <a href="{% url 'comptabilite_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary">Retour</a>
         </div>
       </div>
 
@@ -27,11 +25,11 @@
             <tbody>
               {% for ligne in journaux %}
                 <tr>
-                  <td>{{ ligne.journal__code }}</td>
-                  <td>{{ ligne.journal__nom }}</td>
-                  <td class="text-end">{{ ligne.nombre }}</td>
-                  <td class="text-end">{{ ligne.total_debit|default:0|floatformat:2 }}</td>
-                  <td class="text-end">{{ ligne.total_credit|default:0|floatformat:2 }}</td>
+                  <td>{{ ligne.ecriture__journal__code }}</td>
+                  <td>{{ ligne.ecriture__journal__nom }}</td>
+                  <td class="text-end">{{ ligne.nombre|format_amount:0 }}</td>
+                  <td class="text-end">{{ ligne.total_debit|default:0|format_amount }}</td>
+                  <td class="text-end">{{ ligne.total_credit|default:0|format_amount }}</td>
                 </tr>
               {% empty %}
                 <tr>

@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="standalone-page">
     <div class="standalone-surface">
@@ -15,15 +16,15 @@
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-label">Total HT</div>
-          <div class="kpi-value">{{ total_ht|floatformat:2 }}</div>
+          <div class="kpi-value">{{ total_ht|format_amount }}</div>
         </div>
         <div class="kpi-card is-danger">
           <div class="kpi-label">Total TVA</div>
-          <div class="kpi-value text-danger">{{ total_tva|floatformat:2 }}</div>
+          <div class="kpi-value text-danger">{{ total_tva|format_amount }}</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Total TTC</div>
-          <div class="kpi-value">{{ total_ttc|floatformat:2 }}</div>
+          <div class="kpi-value">{{ total_ttc|format_amount }}</div>
         </div>
       </div>
 
@@ -45,10 +46,10 @@
                 <tr>
                   <td>{{ ligne.reference }}</td>
                   <td>{{ ligne.client }}</td>
-                  <td>{{ ligne.date_emission|date:'d/m/Y' }}</td>
-                  <td class="text-end">{{ ligne.montant_ht|floatformat:2 }}</td>
-                  <td class="text-end">{{ ligne.montant_tva|floatformat:2 }}</td>
-                  <td class="text-end">{{ ligne.montant_ttc|floatformat:2 }}</td>
+                  <td>{{ ligne.date_emission|date:'d/m/Y H:i' }}</td>
+                  <td class="text-end">{{ ligne.montant_ht|format_amount }}</td>
+                  <td class="text-end">{{ ligne.montant_tva|format_amount }}</td>
+                  <td class="text-end">{{ ligne.montant_ttc|format_amount }}</td>
                 </tr>
               {% empty %}
                 <tr>

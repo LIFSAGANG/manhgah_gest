@@ -1,0 +1,73 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2>Gestion des comptes tiers</h2>
+          <p class="text-muted mb-0">Vue rapide des tiers clients et fournisseurs.</p>
+        </div>
+      </div>
+
+      <div class="standalone-table-card mb-4">
+        <h3 class="h6 mb-3">Clients</h3>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Raison sociale</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Actif</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for client in clients %}
+                <tr>
+                  <td>{{ client.code_client|default:client.code }}</td>
+                  <td>{{ client.raison_sociale|default:client.nom }}</td>
+                  <td>{{ client.email|default:'-' }}</td>
+                  <td>{{ client.telephone|default:'-' }}</td>
+                  <td>{% if client.actif %}Oui{% else %}Non{% endif %}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" class="empty-state">Aucun client.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="standalone-table-card">
+        <h3 class="h6 mb-3">Fournisseurs</h3>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Raison sociale</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Actif</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for fournisseur in fournisseurs %}
+                <tr>
+                  <td>{{ fournisseur.code_fournisseur|default:fournisseur.code }}</td>
+                  <td>{{ fournisseur.raison_sociale }}</td>
+                  <td>{{ fournisseur.email|default:'-' }}</td>
+                  <td>{{ fournisseur.telephone|default:'-' }}</td>
+                  <td>{% if fournisseur.actif %}Oui{% else %}Non{% endif %}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" class="empty-state">Aucun fournisseur.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

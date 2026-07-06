@@ -2,8 +2,8 @@ from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from .models import (
-    Societe, Produit, Client, Facture, Agence, Categorie, Projet, 
-    Fournisseur, Achat, Depense, Role, UtilisateurProfile, 
+    Societe, Produit, Client, Facture, LigneVente, Agence, Categorie, Projet, 
+    Fournisseur, Achat, LigneAchat, Depense, Role, UtilisateurProfile, 
     Journal, EcritureComptable, MouvementStock, ActivityLog
 )
 import json
@@ -54,8 +54,8 @@ _old_values = {}
 @receiver(pre_save)
 def track_old_values(sender, instance, **kwargs):
     """Store old values before update"""
-    if sender in [Societe, Produit, Client, Facture, Agence, Categorie, Projet, 
-                  Fournisseur, Achat, Depense, Role, UtilisateurProfile, 
+    if sender in [Societe, Produit, Client, Facture, LigneVente, Agence, Categorie, Projet, 
+                  Fournisseur, Achat, LigneAchat, Depense, Role, UtilisateurProfile, 
                   Journal, EcritureComptable, MouvementStock]:
         try:
             old_instance = sender.objects.get(pk=instance.pk)
@@ -67,8 +67,8 @@ def track_old_values(sender, instance, **kwargs):
 @receiver(post_save)
 def log_activity_create_update(sender, instance, created, **kwargs):
     """Log creation and update activities"""
-    if sender in [Societe, Produit, Client, Facture, Agence, Categorie, Projet, 
-                  Fournisseur, Achat, Depense, Role, UtilisateurProfile, 
+    if sender in [Societe, Produit, Client, Facture, LigneVente, Agence, Categorie, Projet, 
+                  Fournisseur, Achat, LigneAchat, Depense, Role, UtilisateurProfile, 
                   Journal, EcritureComptable, MouvementStock]:
         
         try:
@@ -116,8 +116,8 @@ def log_activity_create_update(sender, instance, created, **kwargs):
 @receiver(post_delete)
 def log_activity_delete(sender, instance, **kwargs):
     """Log deletion activities"""
-    if sender in [Societe, Produit, Client, Facture, Agence, Categorie, Projet, 
-                  Fournisseur, Achat, Depense, Role, UtilisateurProfile, 
+    if sender in [Societe, Produit, Client, Facture, LigneVente, Agence, Categorie, Projet, 
+                  Fournisseur, Achat, LigneAchat, Depense, Role, UtilisateurProfile, 
                   Journal, EcritureComptable, MouvementStock]:
         
         try:
@@ -156,3 +156,46 @@ def log_user_activity(sender, instance, created, **kwargs):
     """Log user login/creation activities"""
     if not created:  # Only log for updates (not creation during migration)
         pass
+
+
+@receiver(post_save, sender=Societe)
+def generate_plan_comptable(sender, instance, created, **kwargs):
+    """Auto-generate plan comptable when a new Societe is created"""
+    if not created:
+        return  # Only for new societies
+    
+    from .models import PlanComptable
+    from django.db import transaction
+    
+    # Plan comptable standard pour chaque nouvelle société
+    plan_comptable_data = [
+        ('101100', 'Capital engagé non appelé', 'Capitaux propres', 1),
+        ('101200', 'Capital souscrit, appelé, non versé', 'Capitaux propres', 1),
+        ('101300', 'Capital souscrit, appelé, versé, non amorti', 'Capitaux propres', 1),
+        ('401100', 'Fournisseurs', 'Fournisseur', 4),
+        ('401200', 'Fournisseurs, Groupe', 'Fournisseur', 4),
+        ('411100', 'Clients', 'Client', 4),
+        ('411200', 'Clients - Groupe', 'Client', 4),
+        ('512100', 'Banque', 'Banque et espèces', 5),
+        ('531100', 'Caisse', 'Banque et espèces', 5),
+        ('600100', 'Achats matières premières', 'Charges', 6),
+        ('700100', 'Ventes', 'Revenus', 7),
+    ]
+    
+    try:
+        with transaction.atomic():
+            for numero, nom, type_compte, classe in plan_comptable_data:
+                PlanComptable.objects.get_or_create(
+                    societe=instance,
+                    numero_compte=numero,
+                    defaults={
+                        'nom_compte': nom,
+                        'type_compte': type_compte,
+                        'classe': classe,
+                        'actif': True,
+                    }
+                )
+    except Exception as e:
+        # Silently fail - plan comptable should be imported manually
+        print(f"Error generating plan comptable for {instance}: {e}")
+

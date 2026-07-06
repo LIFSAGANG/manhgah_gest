@@ -3,16 +3,19 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from .models import (
     Societe, Produit, Client, Facture, Agence, Categorie, Projet,
-    Fournisseur, Achat, Depense, Journal, EcritureComptable, Stock,
+    Fournisseur, Achat, LigneAchat, Depense, Journal, EcritureComptable, Stock,
     MouvementStock, Role, AppPermission, RolePermission,
-    UtilisateurProfile, ActivityLog
+    UtilisateurProfile, LigneVente, ActivityLog, Caisse, MouvementCaisse, LogActivite, Banque, MouvementBanque, PlanComptable, LigneEcriture
 )
 from .serializers import (
     SocieteSerializer, ProduitSerializer, ClientSerializer, FactureSerializer,
+    LigneVenteSerializer,
     AgenceSerializer, CategorieSerializer, ProjetSerializer, FournisseurSerializer,
-    AchatSerializer, DepenseSerializer, JournalSerializer, EcritureComptableSerializer, StockSerializer,
+    AchatSerializer, LigneAchatSerializer, DepenseSerializer, JournalSerializer, EcritureComptableSerializer, PlanComptableSerializer, LigneEcritureSerializer, StockSerializer,
     MouvementStockSerializer, RoleSerializer, AppPermissionSerializer,
-    RolePermissionSerializer, UtilisateurProfileSerializer, ActivityLogSerializer
+    RolePermissionSerializer, UtilisateurProfileSerializer, ActivityLogSerializer,
+    CaisseSerializer, MouvementCaisseSerializer, LogActiviteSerializer,
+    BanqueSerializer, MouvementBanqueSerializer
 )
 
 class BaseModelViewSet(viewsets.ModelViewSet):
@@ -34,6 +37,11 @@ class FactureViewSet(BaseModelViewSet):
     queryset = Facture.objects.all()
     serializer_class = FactureSerializer
 
+
+class LigneVenteViewSet(BaseModelViewSet):
+    queryset = LigneVente.objects.all()
+    serializer_class = LigneVenteSerializer
+
 class AgenceViewSet(BaseModelViewSet):
     queryset = Agence.objects.all()
     serializer_class = AgenceSerializer
@@ -54,6 +62,11 @@ class AchatViewSet(BaseModelViewSet):
     queryset = Achat.objects.all()
     serializer_class = AchatSerializer
 
+
+class LigneAchatViewSet(BaseModelViewSet):
+    queryset = LigneAchat.objects.all()
+    serializer_class = LigneAchatSerializer
+
 class DepenseViewSet(BaseModelViewSet):
     queryset = Depense.objects.all()
     serializer_class = DepenseSerializer
@@ -65,6 +78,16 @@ class JournalViewSet(BaseModelViewSet):
 class EcritureComptableViewSet(BaseModelViewSet):
     queryset = EcritureComptable.objects.all()
     serializer_class = EcritureComptableSerializer
+
+
+class PlanComptableViewSet(BaseModelViewSet):
+    queryset = PlanComptable.objects.all()
+    serializer_class = PlanComptableSerializer
+
+
+class LigneEcritureViewSet(BaseModelViewSet):
+    queryset = LigneEcriture.objects.all()
+    serializer_class = LigneEcritureSerializer
 
 class StockViewSet(BaseModelViewSet):
     queryset = Stock.objects.all()
@@ -105,3 +128,28 @@ class UtilisateurProfileViewSet(BaseModelViewSet):
 class ActivityLogViewSet(BaseModelViewSet):
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
+
+
+class CaisseViewSet(BaseModelViewSet):
+    queryset = Caisse.objects.all()
+    serializer_class = CaisseSerializer
+
+
+class MouvementCaisseViewSet(BaseModelViewSet):
+    queryset = MouvementCaisse.objects.all()
+    serializer_class = MouvementCaisseSerializer
+
+
+class LogActiviteViewSet(BaseModelViewSet):
+    queryset = LogActivite.objects.all()
+    serializer_class = LogActiviteSerializer
+
+
+class BanqueViewSet(BaseModelViewSet):
+    queryset = Banque.objects.all()
+    serializer_class = BanqueSerializer
+
+
+class MouvementBanqueViewSet(BaseModelViewSet):
+    queryset = MouvementBanque.objects.all()
+    serializer_class = MouvementBanqueSerializer

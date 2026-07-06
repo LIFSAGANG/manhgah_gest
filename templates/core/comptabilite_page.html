@@ -1,207 +1,170 @@
-{% load static %}
-<!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Comptabilite | Manhgah-Gest</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-      .comp-shell {
-        min-height: calc(100vh - 44px);
-        height: calc(100vh - 44px);
-        padding: 0;
-        background:
-          radial-gradient(circle at 12% 15%, rgba(124, 58, 237, 0.24), transparent 42%),
-          radial-gradient(circle at 88% 80%, rgba(59, 130, 246, 0.2), transparent 46%),
-          linear-gradient(140deg, #1b1234 0%, #2c2550 45%, #1d2441 100%);
-      }
-      .comp-panel {
-        max-width: 100%;
-        width: 100%;
-        margin: 0;
-        min-height: calc(100vh - 44px);
-        border-radius: 0;
-        background: rgba(255, 255, 255, 0.08);
-        border: none;
-        box-shadow: none;
-        backdrop-filter: blur(7px);
-        padding: 22px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      .comp-head { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
-      .comp-title { color: #f8fafc; margin: 0; font-size: clamp(1.8rem, 3.8vw, 3.2rem); font-weight: 800; display: none; }
-      .comp-close { border: 0; border-radius: 12px; background: #f8fafc; color: #0f172a; padding: 10px 14px; text-decoration: none; font-weight: 700; }
-      .comp-menu-bar { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-      .comp-menu { position: relative; }
-      .comp-menu-btn {
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: #ede9fe;
-        background: rgba(30, 27, 75, 0.35);
-        border-radius: 10px;
-        padding: 10px 16px;
-        font-weight: 800;
-        transition: all 0.2s ease;
-      }
-      .comp-menu-btn:hover,
-      .comp-menu-btn.active {
-        border-color: #22d3ee;
-        color: #ffffff;
-        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.22);
-      }
-      .comp-menu-btn i.menu-arrow { margin-left: 8px; font-size: 0.85rem; }
-      .comp-dropdown {
-        position: absolute;
-        top: calc(100% + 8px);
-        left: 0;
-        width: min(360px, calc(100vw - 40px));
-        background: #31274f;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        box-shadow: 0 20px 30px rgba(2, 6, 23, 0.45);
-        padding: 8px;
-        z-index: 20;
-      }
-      .comp-dropdown a {
-        display: block;
-        color: #f3e8ff;
-        text-decoration: none;
-        font-weight: 700;
-        padding: 10px 12px;
-        border-radius: 8px;
-      }
-      .comp-dropdown a:hover { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
-      .comp-content { border-radius: 16px; background: linear-gradient(180deg, #fbf9ff 0%, #f3efff 100%); border: 1px solid rgba(167, 139, 250, 0.25); padding: 0; overflow: hidden; flex: 1; min-height: 600px; }
-      .comp-placeholder { min-height: 220px; display: flex; align-items: center; justify-content: center; text-align: center; color: #334155; font-weight: 700; }
-      .d-none { display: none !important; }
-      @media (max-width: 992px) {
-        .comp-dropdown { width: min(320px, calc(100vw - 30px)); }
-      }
-      @media (max-width: 700px) {
-        .comp-shell { padding: 10px; }
-        .comp-panel { min-height: calc(100vh - 20px); padding: 14px; border-radius: 16px; }
-        .comp-head { flex-direction: column; align-items: flex-start; }
-        .comp-menu-bar { width: 100%; }
-        .comp-menu { width: 100%; }
-        .comp-menu-btn { width: 100%; text-align: left; }
-        .comp-dropdown { position: static; width: 100%; margin-top: 8px; }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="topbar py-2" style="background:#bfe9ff;">
-      <div class="d-flex align-items-center justify-content-between px-3">
-        <div class="fw-bold" style="color:#0b5d7a; font-size:1.1rem;">Manhgah-Gest</div>
-        <div>
-          {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Déconnexion</a>
-          {% endif %}
+{% extends 'core/base.html' %}
+{% block contacts_nav %}
+  <style>
+    .topbar { display: none !important; }
+    .contacts-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid rgba(229, 231, 235, 1);
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .contacts-nav .nav-left { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .contacts-nav .nav-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .contacts-nav .user-info { display: flex; align-items: center; gap: 8px; color: #0f172a; font-weight: 600; }
+    .contacts-nav .societe-filter select { min-width: 220px; }
+    body.standalone-layout main.container-fluid { margin-top: 0 !important; padding-top: 128px !important; }
+    .contacts-nav { min-height: 78px; height: auto; }
+    .nav-btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .nav-btn-group .btn {
+      background: transparent;
+      border: 1px solid #d1d5db;
+      color: #6b7280;
+      transition: all 0.3s ease;
+      min-width: 150px;
+    }
+    .nav-btn-group .btn:hover { color: #0f172a; border-color: #0f172a; }
+    .nav-btn-group .btn.active,
+    .nav-btn-group .dropdown .btn.active {
+      background: #0f172a !important;
+      border-color: #0f172a !important;
+      color: #fff !important;
+    }
+    .dropdown-menu { min-width: 280px; }
+    .dropdown-menu a { color: #0f172a; text-decoration: none; font-weight: 500; }
+    .dropdown-menu a:hover { background-color: #f0f0f0; color: #0f172a; }
+    #compta-content { height: 100%; overflow: hidden !important; }
+    #compta-content iframe { height: calc(100vh - 86px) !important; width: 100% !important; display: block !important; border: none; }
+    .standalone-page, .standalone-surface { overflow: visible !important; height: auto !important; max-height: none !important; }
+  </style>
+
+  <div class="contacts-nav px-3">
+    <div class="nav-left">
+      <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Accueil</a>
+      <div class="nav-btn-group">
+        <div class="dropdown">
+          <button class="btn nav-btn dropdown-toggle active" type="button" id="btn-traitement" data-bs-toggle="dropdown" aria-expanded="false">Traitement</button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'ecriture_list' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Journaux de saisie</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'plan_comptable_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Gestion des comptes généraux</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'ligne_ecriture_list' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Lignes d'écriture</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'comptes_tiers_gestion_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Gestion des comptes tiers</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'recherche_ecriture_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Recherche d'écriture</a></li>
+          </ul>
+        </div>
+
+        <div class="dropdown">
+          <button class="btn nav-btn dropdown-toggle" type="button" id="btn-etats" data-bs-toggle="dropdown" aria-expanded="false">Etats</button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'brouillard_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('etats');">Brouillard de saisie</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'balance_comptes_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('etats');">Balance Comptable</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'grand_livre_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('etats');">Grand livre</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'etats_tiers_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('etats');">Etat tiers</a></li>
+          </ul>
+        </div>
+
+        <div class="dropdown">
+          <button class="btn nav-btn dropdown-toggle" type="button" id="btn-tresorerie" data-bs-toggle="dropdown" aria-expanded="false">Trésorerie</button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'caisse_list' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('tresorerie');">Caisse principale</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'banque_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('tresorerie');">Banque</a></li>
+          </ul>
+        </div>
+
+        <div class="dropdown">
+          <button class="btn nav-btn dropdown-toggle" type="button" id="btn-configuration" data-bs-toggle="dropdown" aria-expanded="false">Configuration</button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'comptabilite_configuration_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('configuration');">Paramètres comptables</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'plan_comptable_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('configuration');">Plan comptable</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'code_journaux_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('configuration');">Codes journaux</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'comptabilisation_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('configuration');">Comptabilisation</a></li>
+          </ul>
         </div>
       </div>
     </div>
-    <div class="comp-shell" style="height: calc(100vh - 44px);">
-      <section class="comp-panel">
-        <header class="comp-head">
-          <h1 class="comp-title">Comptabilite</h1>
-          <a href="{% url 'accueil' %}" class="comp-close">
-            <i class="fa-solid fa-xmark me-2"></i>Fermer
-          </a>
-        </header>
 
-        <nav class="comp-menu-bar" aria-label="Navigation Comptabilite">
-          {% if '__all__' in user_perms or 'plan_comptable_voir' in user_perms or 'journal_voir' in user_perms %}
-          <div class="comp-menu">
-            <button class="comp-menu-btn" type="button" data-menu-toggle="structures-menu" aria-expanded="false">
-              <i class="fa-solid fa-sitemap me-2"></i>Structures<i class="fa-solid fa-chevron-down menu-arrow"></i>
-            </button>
-            <div class="comp-dropdown d-none" id="structures-menu" role="menu">
-              {% if '__all__' in user_perms or 'plan_comptable_voir' in user_perms %}<a href="#" data-frame-src="{% url 'plan_comptable_page' %}?standalone=1" role="menuitem">Plan comptable</a>{% endif %}
-              {% if '__all__' in user_perms or 'journal_voir' in user_perms %}<a href="#" data-frame-src="{% url 'code_journaux_page' %}?standalone=1" role="menuitem">Code journaux</a>{% endif %}
-            </div>
-          </div>
-          {% endif %}
-
-          {% if '__all__' in user_perms or 'rapport_comptable_voir' in user_perms or 'ecriture_voir' in user_perms %}
-          <div class="comp-menu">
-            <button class="comp-menu-btn" type="button" data-menu-toggle="etats-menu" aria-expanded="false">
-              <i class="fa-solid fa-chart-simple me-2"></i>Etats<i class="fa-solid fa-chevron-down menu-arrow"></i>
-            </button>
-            <div class="comp-dropdown d-none" id="etats-menu" role="menu">
-              {% if '__all__' in user_perms or 'ecriture_voir' in user_perms %}<a href="#" data-frame-src="{% url 'brouillard_page' %}?standalone=1" role="menuitem">Brouillard</a>{% endif %}
-              {% if '__all__' in user_perms or 'journal_voir' in user_perms %}<a href="#" data-frame-src="{% url 'etat_journaux_page' %}?standalone=1" role="menuitem">Journaux</a>{% endif %}
-              {% if '__all__' in user_perms or 'rapport_comptable_voir' in user_perms %}
-              <a href="#" data-frame-src="{% url 'balance_comptes_page' %}?standalone=1" role="menuitem">Balances des comptes</a>
-              <a href="#" data-frame-src="{% url 'grand_livre_page' %}?standalone=1" role="menuitem">Grand livres</a>
-              <a href="#" data-frame-src="{% url 'etats_tiers_page' %}?standalone=1" role="menuitem">ETATS Tiers</a>
-              {% endif %}
-            </div>
-          </div>
-          {% endif %}
-        </nav>
-
-        <main class="comp-content" style="padding:0; overflow:hidden;">
-          <div class="comp-placeholder" id="comp-placeholder">
-            Clique sur Structures ou Etats pour ouvrir le menu deroulant.
-          </div>
-          <iframe id="comp-frame" src="" style="display:none; width:100%; height:100%; border:none; border-radius:0;"></iframe>
-        </main>
-      </section>
+    <div class="nav-right">
+      <div class="societe-filter">
+        <select id="compta-societe-select" class="form-select form-select-sm" onchange="onSocieteChange()">
+          {% for societe in societes %}
+            <option value="{{ societe.id }}" {% if selected_societe_id == societe.id %}selected{% endif %}>{{ societe.raison_sociale }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="user-info">
+        <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+      </div>
+      <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">Déconnexion</a>
     </div>
+  </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const menuButtons = document.querySelectorAll('[data-menu-toggle]');
-        const dropdowns = document.querySelectorAll('.comp-dropdown');
-        const frame = document.getElementById('comp-frame');
-        const placeholder = document.getElementById('comp-placeholder');
+  <main class="container-fluid" id="compta-content">
+    <iframe id="compta-iframe" src="{% url 'ecriture_list' %}?standalone=1&embed=1&from_comptabilite=1{% if selected_societe_id %}&societe={{ selected_societe_id }}{% endif %}"></iframe>
+  </main>
 
-        function closeAllMenus() {
-          dropdowns.forEach(function (menu) { menu.classList.add('d-none'); });
-          menuButtons.forEach(function (button) {
-            button.classList.remove('active');
-            button.setAttribute('aria-expanded', 'false');
-          });
-        }
+  <script>
+    function withSociete(url) {
+      const select = document.getElementById('compta-societe-select');
+      if (!select || !select.value || url.includes('societe=')) {
+        return url;
+      }
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}societe=${encodeURIComponent(select.value)}`;
+    }
 
-        menuButtons.forEach(function (button) {
-          button.addEventListener('click', function (event) {
-            event.stopPropagation();
-            const menuId = button.dataset.menuToggle;
-            const menu = document.getElementById(menuId);
-            const isClosed = menu.classList.contains('d-none');
-            closeAllMenus();
-            if (isClosed) {
-              menu.classList.remove('d-none');
-              button.classList.add('active');
-              button.setAttribute('aria-expanded', 'true');
-            }
-          });
-        });
+    function loadContent(event, url) {
+      if (event) {
+        event.preventDefault();
+      }
+      const iframe = document.getElementById('compta-iframe');
+      if (iframe) {
+        iframe.src = withSociete(url);
+      }
+    }
 
-        document.querySelectorAll('[data-frame-src]').forEach(function (link) {
-          link.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const src = link.getAttribute('data-frame-src');
-            frame.src = src;
-            frame.style.display = 'block';
-            placeholder.style.display = 'none';
-            closeAllMenus();
-          });
-        });
-
-        dropdowns.forEach(function (menu) {
-          menu.addEventListener('click', function (event) { event.stopPropagation(); });
-        });
-
-        document.addEventListener('click', function () { closeAllMenus(); });
+    function setActiveButton(section) {
+      document.querySelectorAll('.nav-btn-group .nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.cssText = '';
       });
-    </script>
-  </body>
-</html>
+      const activeBtn = document.getElementById(`btn-${section}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.style.cssText = 'background: #0f172a !important; border-color: #0f172a !important; color: #fff !important;';
+      }
+    }
+
+    function onSocieteChange() {
+      const active = document.querySelector('.nav-btn-group .nav-btn.active');
+      if (active && active.id === 'btn-configuration') {
+        loadContent(null, "{% url 'comptabilite_configuration_page' %}?standalone=1&embed=1&from_comptabilite=1");
+        return;
+      }
+      loadContent(null, "{% url 'ecriture_list' %}?standalone=1&embed=1&from_comptabilite=1");
+    }
+
+    document.querySelectorAll('.nav-btn-group .nav-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const section = this.getAttribute('data-section');
+        if (section) {
+          setActiveButton(section);
+        }
+      });
+    });
+
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'loadContent') {
+        loadContent(null, event.data.url);
+      }
+    });
+  </script>
+{% endblock %}

@@ -5,31 +5,423 @@
       <div class="standalone-head">
         <div>
           <h2 class="h4 mb-1">{{ title }}</h2>
-          <p class="text-muted mb-0">Saisie des écritures comptables.</p>
+          <p class="text-muted mb-0">
+            Saisie des écritures comptables.
+            {% if is_create and selected_journal_label %}
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">Journal: {{ selected_journal_label }}</span>
+            {% endif %}
+          </p>
         </div>
         <div class="standalone-tools">
-          <a href="{% url 'ecriture_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
+          <a href="{% url 'ecriture_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
         </div>
       </div>
 
       <div class="form-shell">
         <form method="post">
           {% csrf_token %}
-          {% for field in form %}
-            <div class="mb-3">
-              {{ field.label_tag }}
-              {{ field }}
-              {% if field.errors %}
-                <div class="invalid-feedback d-block">{{ field.errors }}</div>
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          {{ form.societe }}
+          {{ form.journal }}
+          {% if form.agence %}{{ form.agence }}{% endif %}
+          {% if form.utilisateur %}{{ form.utilisateur }}{% endif %}
+
+          <div class="row g-3 align-items-end mb-3">
+            <div class="col-lg-2 col-md-6">
+              {{ form.date_ecriture.label_tag }}
+              {{ form.date_ecriture }}
+              {% if form.date_ecriture.errors %}
+                <div class="invalid-feedback d-block">{{ form.date_ecriture.errors }}</div>
               {% endif %}
             </div>
-          {% endfor %}
-          <div class="mt-3">
-            <button type="submit" class="btn btn-primary">Enregistrer</button>
-            <a href="{% url 'ecriture_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Annuler</a>
+            <div class="col-lg-2 col-md-6">
+              {{ form.piece_comptable.label_tag }}
+              {{ form.piece_comptable }}
+              {% if form.piece_comptable.errors %}
+                <div class="invalid-feedback d-block">{{ form.piece_comptable.errors }}</div>
+              {% endif %}
+            </div>
+            <div class="col-lg-2 col-md-6">
+              {{ form.numero_ecriture.label_tag }}
+              {{ form.numero_ecriture }}
+              {% if form.numero_ecriture.errors %}
+                <div class="invalid-feedback d-block">{{ form.numero_ecriture.errors }}</div>
+              {% endif %}
+            </div>
+            <div class="col-lg-6 col-md-6" id="client-fournisseur-wrap">
+              <div id="client-field-wrap" style="display:none;">
+                {{ form.client.label_tag }}
+                {{ form.client }}
+                {% if form.client.errors %}
+                  <div class="invalid-feedback d-block">{{ form.client.errors }}</div>
+                {% endif %}
+              </div>
+              <div id="fournisseur-field-wrap" style="display:none;">
+                {{ form.fournisseur.label_tag }}
+                {{ form.fournisseur }}
+                {% if form.fournisseur.errors %}
+                  <div class="invalid-feedback d-block">{{ form.fournisseur.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            {{ form.libelle_ecriture.label_tag }}
+            {{ form.libelle_ecriture }}
+            {% if form.libelle_ecriture.errors %}
+              <div class="invalid-feedback d-block">{{ form.libelle_ecriture.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              {{ form.valide }}
+              {{ form.valide.label_tag }}
+            </div>
+            {% if form.valide.errors %}
+              <div class="invalid-feedback d-block">{{ form.valide.errors }}</div>
+            {% endif %}
+          </div>
+
+          {% if line_formset %}
+            <hr>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="h6 mb-0">Lignes d'écriture</h3>
+              <button type="button" id="add-line-btn" class="btn btn-sm btn-outline-primary">Ajouter une ligne</button>
+            </div>
+
+            <div class="row g-2 mb-3" id="totaux-ecriture-box">
+              <div class="col-md-3">
+                <div class="border rounded p-2 bg-light">
+                  <div class="small text-muted">Total débit</div>
+                  <div class="fw-semibold" id="total-debit-value">0.00</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="border rounded p-2 bg-light">
+                  <div class="small text-muted">Total crédit</div>
+                  <div class="fw-semibold" id="total-credit-value">0.00</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="border rounded p-2 bg-light">
+                  <div class="small text-muted">Écart</div>
+                  <div class="fw-semibold" id="total-ecart-value">0.00</div>
+                </div>
+              </div>
+              <div class="col-md-3 d-flex align-items-stretch">
+                <div class="border rounded p-2 w-100 d-flex flex-column justify-content-center" id="balance-indicator-box">
+                  <div class="small text-muted">État</div>
+                  <div class="fw-semibold" id="balance-indicator-text">Déséquilibrée</div>
+                </div>
+              </div>
+            </div>
+
+            {{ line_formset.management_form }}
+            {% if line_formset.non_form_errors %}
+              <div class="alert alert-danger">{{ line_formset.non_form_errors }}</div>
+            {% endif %}
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="lignes-ecriture-table">
+                <thead>
+                  <tr>
+                    <th style="min-width: 220px;">Compte</th>
+                    <th class="text-end" style="min-width: 130px;">Débit</th>
+                    <th class="text-end" style="min-width: 130px;">Crédit</th>
+                    <th class="text-center" style="width: 110px;">Supprimer</th>
+                  </tr>
+                </thead>
+                <tbody id="lignes-ecriture-body">
+                  {% for line_form in line_formset %}
+                    <tr class="line-row">
+                      <td>
+                        {{ line_form.compte }}
+                        {% if line_form.compte.errors %}<div class="invalid-feedback d-block">{{ line_form.compte.errors }}</div>{% endif %}
+                      </td>
+                      <td class="text-end">
+                        {{ line_form.debit }}
+                        {% if line_form.debit.errors %}<div class="invalid-feedback d-block">{{ line_form.debit.errors }}</div>{% endif %}
+                      </td>
+                      <td class="text-end">
+                        {{ line_form.credit }}
+                        {% if line_form.credit.errors %}<div class="invalid-feedback d-block">{{ line_form.credit.errors }}</div>{% endif %}
+                      </td>
+                      <td class="text-center">
+                        {% if line_form.instance.pk %}
+                          {{ line_form.DELETE }}
+                        {% else %}
+                          <button type="button" class="btn btn-sm btn-outline-danger remove-line-btn">Suppr.</button>
+                        {% endif %}
+                        {{ line_form.id }}
+                        {% if line_form.non_field_errors %}<div class="invalid-feedback d-block">{{ line_form.non_field_errors }}</div>{% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <template id="empty-line-template">
+              <tr class="line-row">
+                <td>__COMPTE__</td>
+                <td>__DEBIT__</td>
+                <td>__CREDIT__</td>
+                <td class="text-center">
+                  __ID__
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-line-btn">Suppr.</button>
+                </td>
+              </tr>
+            </template>
+            <p class="text-muted small mb-0">Règles: au moins 2 lignes, total débit = total crédit, et une seule colonne (débit ou crédit) par ligne.</p>
+          {% endif %}
+
+          <div class="mt-4">
+            <button type="submit" id="save-ecriture-btn" class="btn btn-success">Enregistrer</button>
+            <a href="{% url 'ecriture_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
           </div>
         </form>
       </div>
     </div>
   </div>
+
+  {% if line_formset %}
+    <script>
+      (function () {
+        const journalTypeMap = {{ journal_types_json|default:'{}'|safe }};
+        const suggestedClientCompteId = '{{ suggested_client_compte_id|default:"" }}';
+        const suggestedFournisseurCompteId = '{{ suggested_fournisseur_compte_id|default:"" }}';
+        const journalSelect = document.getElementById('{{ form.journal.id_for_label }}');
+        const clientWrap = document.getElementById('client-field-wrap');
+        const fournisseurWrap = document.getElementById('fournisseur-field-wrap');
+        const clientSelect = document.getElementById('{{ form.client.id_for_label }}');
+        const fournisseurSelect = document.getElementById('{{ form.fournisseur.id_for_label }}');
+
+        function getFirstCompteSelect() {
+          const firstRow = document.querySelector('#lignes-ecriture-body .line-row');
+          return firstRow ? firstRow.querySelector('select[name$="-compte"]') : null;
+        }
+
+        function applySuggestedCompte(suggestedCompteId) {
+          if (!suggestedCompteId) {
+            return;
+          }
+          const compteSelect = getFirstCompteSelect();
+          if (!compteSelect || compteSelect.value) {
+            return;
+          }
+          const hasOption = Array.from(compteSelect.options).some((opt) => opt.value === suggestedCompteId);
+          if (hasOption) {
+            compteSelect.value = suggestedCompteId;
+          }
+        }
+
+        function syncSuggestedTiersCompte() {
+          if (!journalSelect) {
+            return;
+          }
+          const selectedType = journalTypeMap[String(journalSelect.value)] || '';
+          if (selectedType === 'Vente' && clientSelect && clientSelect.value) {
+            applySuggestedCompte(suggestedClientCompteId);
+          }
+          if (selectedType === 'Achat' && fournisseurSelect && fournisseurSelect.value) {
+            applySuggestedCompte(suggestedFournisseurCompteId);
+          }
+        }
+
+        function toggleTiersFields() {
+          if (!journalSelect || !clientWrap || !fournisseurWrap) {
+            return;
+          }
+          const selectedType = journalTypeMap[String(journalSelect.value)] || '';
+          const isVente = selectedType === 'Vente';
+          const isAchat = selectedType === 'Achat';
+
+          clientWrap.style.display = isVente ? '' : 'none';
+          fournisseurWrap.style.display = isAchat ? '' : 'none';
+
+          if (clientSelect) {
+            clientSelect.required = isVente;
+            if (!isVente) {
+              clientSelect.value = '';
+            }
+          }
+          if (fournisseurSelect) {
+            fournisseurSelect.required = isAchat;
+            if (!isAchat) {
+              fournisseurSelect.value = '';
+            }
+          }
+
+          syncSuggestedTiersCompte();
+        }
+
+        if (journalSelect) {
+          journalSelect.addEventListener('change', toggleTiersFields);
+          toggleTiersFields();
+        }
+        if (clientSelect) {
+          clientSelect.addEventListener('change', syncSuggestedTiersCompte);
+        }
+        if (fournisseurSelect) {
+          fournisseurSelect.addEventListener('change', syncSuggestedTiersCompte);
+        }
+
+        const addBtn = document.getElementById('add-line-btn');
+        const body = document.getElementById('lignes-ecriture-body');
+        const totalFormsInput = document.getElementById('id_lignes-TOTAL_FORMS');
+        const template = document.getElementById('empty-line-template');
+        const emptyPrefix = '__prefix__';
+
+        if (!addBtn || !body || !totalFormsInput || !template) {
+          return;
+        }
+
+        function getEmptyHtml(index) {
+          const compte = '{{ line_formset.empty_form.compte|escapejs }}'.replaceAll(emptyPrefix, index);
+          const debit = '{{ line_formset.empty_form.debit|escapejs }}'.replaceAll(emptyPrefix, index);
+          const credit = '{{ line_formset.empty_form.credit|escapejs }}'.replaceAll(emptyPrefix, index);
+          const idField = '{{ line_formset.empty_form.id|escapejs }}'.replaceAll(emptyPrefix, index);
+
+          return template.innerHTML
+            .replace('__COMPTE__', compte)
+            .replace('__DEBIT__', debit)
+            .replace('__CREDIT__', credit)
+            .replace('__ID__', idField);
+        }
+
+        function bindRemoveButtons(scope) {
+          scope.querySelectorAll('.remove-line-btn').forEach((btn) => {
+            if (btn.dataset.bound === '1') {
+              return;
+            }
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function () {
+              const row = btn.closest('.line-row');
+              if (row) {
+                row.remove();
+                recomputeTotals();
+              }
+            });
+          });
+        }
+
+        function applyLineInputStyling(scope) {
+          scope.querySelectorAll('input[name$="-debit"], input[name$="-credit"]').forEach((input) => {
+            input.classList.add('text-end');
+            if (!input.placeholder) {
+              input.placeholder = '0,00';
+            }
+          });
+        }
+
+        function readAmount(input) {
+          if (!input) {
+            return 0;
+          }
+          const normalized = (input.value || '').replace(',', '.').trim();
+          const value = Number.parseFloat(normalized);
+          return Number.isFinite(value) ? value : 0;
+        }
+
+        function formatAmount(value) {
+          return value.toLocaleString('fr-FR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+        }
+
+        function recomputeTotals() {
+          let totalDebit = 0;
+          let totalCredit = 0;
+
+          body.querySelectorAll('.line-row').forEach((row) => {
+            const debitInput = row.querySelector('input[name$="-debit"]');
+            const creditInput = row.querySelector('input[name$="-credit"]');
+            totalDebit += readAmount(debitInput);
+            totalCredit += readAmount(creditInput);
+          });
+
+          const ecart = Math.abs(totalDebit - totalCredit);
+          const isBalanced = ecart < 0.00001 && (totalDebit > 0 || totalCredit > 0);
+
+          const debitNode = document.getElementById('total-debit-value');
+          const creditNode = document.getElementById('total-credit-value');
+          const ecartNode = document.getElementById('total-ecart-value');
+          const indicatorText = document.getElementById('balance-indicator-text');
+          const indicatorBox = document.getElementById('balance-indicator-box');
+          const saveBtn = document.getElementById('save-ecriture-btn');
+
+          if (debitNode) debitNode.textContent = formatAmount(totalDebit);
+          if (creditNode) creditNode.textContent = formatAmount(totalCredit);
+          if (ecartNode) ecartNode.textContent = formatAmount(ecart);
+
+          if (indicatorText && indicatorBox) {
+            if (isBalanced) {
+              indicatorText.textContent = 'Équilibrée';
+              indicatorText.classList.remove('text-danger');
+              indicatorText.classList.add('text-success');
+              indicatorBox.classList.remove('border-danger');
+              indicatorBox.classList.add('border-success');
+            } else {
+              indicatorText.textContent = 'Déséquilibrée';
+              indicatorText.classList.remove('text-success');
+              indicatorText.classList.add('text-danger');
+              indicatorBox.classList.remove('border-success');
+              indicatorBox.classList.add('border-danger');
+            }
+          }
+
+          if (saveBtn) {
+            saveBtn.disabled = !isBalanced;
+            saveBtn.title = isBalanced
+              ? ''
+              : 'Impossible d\'enregistrer: l\'écriture doit être équilibrée (débit = crédit).';
+          }
+        }
+
+        addBtn.addEventListener('click', function () {
+          const index = Number(totalFormsInput.value);
+          const wrapper = document.createElement('tbody');
+          wrapper.innerHTML = getEmptyHtml(index);
+          const newRow = wrapper.firstElementChild;
+          if (newRow) {
+            body.appendChild(newRow);
+            bindRemoveButtons(newRow.parentElement);
+            applyLineInputStyling(newRow.parentElement);
+            totalFormsInput.value = String(index + 1);
+            recomputeTotals();
+          }
+        });
+
+        body.addEventListener('input', function (event) {
+          const target = event.target;
+          if (target && target.matches('input[name$="-debit"], input[name$="-credit"]')) {
+            const row = target.closest('.line-row');
+            if (row) {
+              const debitInput = row.querySelector('input[name$="-debit"]');
+              const creditInput = row.querySelector('input[name$="-credit"]');
+              const currentValue = readAmount(target);
+              if (currentValue > 0) {
+                if (target === debitInput && creditInput) {
+                  creditInput.value = '';
+                }
+                if (target === creditInput && debitInput) {
+                  debitInput.value = '';
+                }
+              }
+            }
+            recomputeTotals();
+          }
+        });
+
+        bindRemoveButtons(body);
+        applyLineInputStyling(body);
+        syncSuggestedTiersCompte();
+        recomputeTotals();
+      })();
+    </script>
+  {% endif %}
 {% endblock %}

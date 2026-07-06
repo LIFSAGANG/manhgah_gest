@@ -177,6 +177,8 @@
             <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'role_list' %}?standalone=1&embed=1&from_parametres=1'); setActiveButton('utilisateurs');">Rôles</a></li>
           </ul>
         </div>
+
+        <a href="#" class="btn nav-btn" id="btn-projets-marches" data-section="projets-marches" onclick="loadContent(event, '{% url 'projet_list' %}?standalone=1&embed=1&from_parametres=1')">Projets/Marchés</a>
       </div>
     </div>
 
@@ -248,9 +250,9 @@
       if (!href || href === '#') return;
 
       // Vérifier si c'est un lien d'édition, création, suppression ou agences
-      const isEditLink = /\/(societes|utilisateurs|roles|agences)\/(.+\/)?(ajouter|modifier|supprimer|permissions)\//.test(href) ||
-                         /\/(societes|utilisateurs|roles|agences)\/ajouter\//.test(href) ||
-                         /\/(societes|utilisateurs|roles|agences)\/\d+\/(modifier|supprimer|permissions)\//.test(href) ||
+      const isEditLink = /\/(societes|utilisateurs|roles|agences|projets|marches)\/(.+\/)?(ajouter|modifier|supprimer|permissions)\//.test(href) ||
+             /\/(societes|utilisateurs|roles|agences|projets|marches)\/ajouter\//.test(href) ||
+             /\/(societes|utilisateurs|roles|agences|projets|marches)\/\d+\/(modifier|supprimer|permissions)\//.test(href) ||
                          /\/(agences)\/\?/.test(href);
 
       if (isEditLink && !href.includes('standalone=1')) {

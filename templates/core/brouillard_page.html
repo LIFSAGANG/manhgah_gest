@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="standalone-page">
     <div class="standalone-surface">
@@ -6,9 +7,6 @@
         <div>
           <h2>Brouillard</h2>
           <p class="text-muted mb-0">Ecritures classees par date</p>
-        </div>
-        <div class="standalone-tools">
-          <a href="{% url 'comptabilite_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary">Retour</a>
         </div>
       </div>
 
@@ -18,9 +16,10 @@
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Reference</th>
+                <th>Numero</th>
                 <th>Journal</th>
-                <th>Compte</th>
+                <th>Comptes</th>
+                <th>Libelle</th>
                 <th class="text-end">Debit</th>
                 <th class="text-end">Credit</th>
               </tr>
@@ -29,15 +28,27 @@
               {% for ecriture in ecritures %}
                 <tr>
                   <td>{{ ecriture.date_ecriture|date:'d/m/Y' }}</td>
-                  <td>{{ ecriture.reference }}</td>
+                  <td>{{ ecriture.numero_ecriture|default:ecriture.reference }}</td>
                   <td>{{ ecriture.journal.nom }}</td>
-                  <td>{{ ecriture.compte }}</td>
-                  <td class="text-end">{{ ecriture.debit|floatformat:2 }}</td>
-                  <td class="text-end">{{ ecriture.credit|floatformat:2 }}</td>
+                  <td>
+                    {% with lignes=ecriture.lignes.all %}
+                      {% if lignes %}
+                        {% for ligne in lignes|slice:':3' %}
+                          {{ ligne.compte.numero_compte }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                        {% if lignes|length > 3 %}...{% endif %}
+                      {% else %}
+                        -
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                  <td>{{ ecriture.libelle_ecriture|default:ecriture.intitule }}</td>
+                  <td class="text-end">{{ ecriture.total_debit|default:0|format_amount }}</td>
+                  <td class="text-end">{{ ecriture.total_credit|default:0|format_amount }}</td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6" class="empty-state">Aucune ecriture en brouillard.</td>
+                  <td colspan="7" class="empty-state">Aucune ecriture en brouillard.</td>
                 </tr>
               {% endfor %}
             </tbody>

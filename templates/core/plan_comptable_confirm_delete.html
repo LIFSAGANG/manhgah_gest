@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="confirm-shell">
+      <h2 class="h5 mb-3">Supprimer un compte comptable</h2>
+      <p>Confirmez-vous la suppression du compte <strong>{{ compte.numero_compte }} - {{ compte.nom_compte }}</strong> ?</p>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <a href="{% url 'plan_comptable_page' %}?standalone=1&embed=1&from_comptabilite=1{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}" class="btn btn-outline-secondary">Annuler</a>
+      </form>
+    </div>
+  </div>
+{% endblock %}

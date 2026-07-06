@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="standalone-page">
     <div class="standalone-surface">
@@ -7,9 +8,11 @@
           <h2>Inventaire du stock</h2>
           <p class="text-muted mb-0">Inventaire détaillé par produit</p>
         </div>
+        {% if request.GET.from_produits_stock != '1' %}
         <div class="standalone-tools">
-          <a href="{% url 'produits_stock_page' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-secondary">Retour</a>
+          <a href="{% url 'produits_stock_page' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_produits_stock == '1' %}&from_produits_stock=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-secondary">Retour</a>
         </div>
+        {% endif %}
       </div>
 
       <div class="standalone-table-card">
@@ -35,9 +38,9 @@
                   <td>{{ stock.agence.nom }}</td>
                   <td>{{ stock.produit.categorie }}</td>
                   <td>{{ stock.produit.prix_achat_ht }}</td>
-                  <td class="text-end">{{ stock.quantite_disponible }}</td>
-                  <td class="text-end">{{ stock.quantite_reservee }}</td>
-                  <td class="text-end">{{ stock.valeur_stock|floatformat:2 }}</td>
+                  <td class="text-end">{{ stock.quantite_disponible|format_amount:0 }}</td>
+                  <td class="text-end">{{ stock.quantite_reservee|format_amount:0 }}</td>
+                  <td class="text-end">{{ stock.valeur_stock|format_amount }}</td>
                 </tr>
               {% empty %}
                 <tr>

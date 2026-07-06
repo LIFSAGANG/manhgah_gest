@@ -1,26 +1,356 @@
 {% extends 'core/base.html' %}
 {% block content %}
-  <div class="container mt-4">
-    <h2>{{ title }}</h2>
-    <form method="post" class="mt-4">
-      {% csrf_token %}
-      <div class="card">
-        <div class="card-body">
-          {% for field in form %}
-            <div class="mb-3">
-              {{ field.label_tag }}
-              {{ field }}
-              {% if field.errors %}
-                <div class="invalid-feedback d-block">{{ field.errors }}</div>
-              {% endif %}
-            </div>
-          {% endfor %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2 class="h4 mb-1">{{ title }}</h2>
+          <p class="text-muted mb-0">Renseignez les informations de l'achat.</p>
         </div>
+        <div class="standalone-tools"></div>
       </div>
-      <div class="mt-3">
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
-        <a href="{% url 'achat_list' %}" class="btn btn-outline-secondary">Annuler</a>
+
+      <div class="form-shell">
+        <form method="post">
+          {% csrf_token %}
+          {{ line_formset.management_form }}
+          <div class="row g-3">
+            {{ form.societe }}
+            <div class="col-md-6">
+              <label class="form-label">Type achat</label>
+              {{ form.type_achat }}
+            </div>
+            <div class="col-md-6" data-project-wrapper>
+              <label class="form-label">Projet (référence)</label>
+              {{ form.projet }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Agence</label>
+              {{ form.agence }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fournisseur</label>
+              {{ form.fournisseur }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">N° achat</label>
+              {{ form.numero_achat }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Statut achat</label>
+              {{ form.statut_achat }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+              {{ form.notes }}
+            </div>
+          </div>
+
+          <div class="mt-4" id="achat-lines">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h3 class="h5 mb-1">Lignes d'achat</h3>
+                <p class="text-muted mb-0">Ajoutez les produits achetés dans le tableau ci-dessous.</p>
+              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm" data-add-line>Ajouter une ligne</button>
+            </div>
+
+            {% if line_formset.non_form_errors %}
+              <div class="alert alert-danger py-2">{{ line_formset.non_form_errors }}</div>
+            {% endif %}
+
+            <div class="table-responsive border rounded-3">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th data-col-product>Produit</th>
+                    <th>Désignation</th>
+                    <th data-col-stock>Stock dispo</th>
+                    <th>Qté</th>
+                    <th>PU HT</th>
+                    <th>TVA %</th>
+                    <th>Montant HT</th>
+                    <th>Montant TVA</th>
+                    <th>Montant TTC</th>
+                    <th>Qté reçue</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody data-lines-body>
+                  {% for line_form in line_formset %}
+                    <tr data-line-row>
+                      <td data-col-product>
+                        {{ line_form.id }}
+                        {{ line_form.produit }}
+                        {% if line_form.produit.errors %}<div class="text-danger small">{{ line_form.produit.errors|join:', ' }}</div>{% endif %}
+                      </td>
+                      <td>
+                        {{ line_form.designation }}
+                        {% if line_form.designation.errors %}<div class="text-danger small">{{ line_form.designation.errors|join:', ' }}</div>{% endif %}
+                      </td>
+                      <td data-col-stock><span class="badge text-bg-light" data-stock-display>-</span></td>
+                      <td>
+                        {{ line_form.quantite }}
+                        {% if line_form.quantite.errors %}<div class="text-danger small">{{ line_form.quantite.errors|join:', ' }}</div>{% endif %}
+                      </td>
+                      <td>{{ line_form.prix_unitaire_ht }}</td>
+                      <td>{{ line_form.taux_tva }}</td>
+                      <td>{{ line_form.montant_ht }}</td>
+                      <td>{{ line_form.montant_tva }}</td>
+                      <td>{{ line_form.montant_ttc }}</td>
+                      <td>{{ line_form.quantite_recue }}</td>
+                      <td class="text-end">
+                        <span class="d-none">{{ line_form.DELETE }}</span>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-remove-line>Retirer</button>
+                        {% if line_form.non_field_errors %}<div class="text-danger small mt-1">{{ line_form.non_field_errors|join:', ' }}</div>{% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="row g-3 mt-2">
+              <div class="col-md-3">
+                <label class="form-label">Total HT</label>
+                {{ form.montant_ht }}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Total TVA</label>
+                {{ form.montant_tva }}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Total TTC</label>
+                {{ form.montant_ttc }}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Montant restant</label>
+                {{ form.montant_restant }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Montant payé</label>
+                {{ form.montant_paye }}
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+            <a href="{% url 'achat_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_achats == '1' %}&from_achats=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   </div>
+
+  {{ line_products|json_script:"achat-products-data" }}
+
+  <template data-empty-row>
+    <tr data-line-row>
+      <td data-col-product>
+        __ID_FIELD__
+        __PRODUCT_FIELD__
+      </td>
+      <td>__DESIGNATION_FIELD__</td>
+      <td data-col-stock><span class="badge text-bg-light" data-stock-display>-</span></td>
+      <td>__QTY_FIELD__</td>
+      <td>__PRICE_FIELD__</td>
+      <td>__TAX_FIELD__</td>
+      <td>__TOTAL_HT_FIELD__</td>
+      <td>__TOTAL_TVA_FIELD__</td>
+      <td>__TOTAL_TTC_FIELD__</td>
+      <td>__QTY_RECEIVED_FIELD__</td>
+      <td class="text-end">
+        <span class="d-none">__DELETE_FIELD__</span>
+        <button type="button" class="btn btn-outline-danger btn-sm" data-remove-line>Retirer</button>
+      </td>
+    </tr>
+  </template>
+
+  <script>
+    (function () {
+      const container = document.getElementById('achat-lines');
+      if (!container) return;
+
+      const tbody = container.querySelector('[data-lines-body]');
+      const addButton = container.querySelector('[data-add-line]');
+      const totalForms = document.querySelector('[name="lignes-TOTAL_FORMS"]');
+      const agenceInput = document.getElementById('id_agence');
+      const typeAchatInput = document.getElementById('id_type_achat');
+      const projectWrapper = document.querySelector('[data-project-wrapper]');
+      const paidInput = document.getElementById('id_montant_paye');
+      const totalHtInput = document.getElementById('id_montant_ht');
+      const totalTvaInput = document.getElementById('id_montant_tva');
+      const totalTtcInput = document.getElementById('id_montant_ttc');
+      const remainingInput = document.getElementById('id_montant_restant');
+      const productsData = JSON.parse(document.getElementById('achat-products-data').textContent || '[]');
+      const productsMap = Object.fromEntries(productsData.map((product) => [String(product.id), product]));
+
+      function toNumber(value) {
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+
+      function setValue(input, value) {
+        if (input) input.value = value.toFixed(2);
+      }
+
+      function updateStockDisplay(row) {
+        const productInput = row.querySelector('.line-product');
+        const stockDisplay = row.querySelector('[data-stock-display]');
+        if ((typeAchatInput?.value || 'Produit') !== 'Produit') {
+          if (stockDisplay) stockDisplay.textContent = '-';
+          return;
+        }
+        const agenceId = agenceInput?.value;
+        if (!stockDisplay || !productInput || !agenceId) {
+          if (stockDisplay) stockDisplay.textContent = '-';
+          return;
+        }
+
+        const selected = productsMap[productInput.value];
+        const stockValue = selected?.stocks_by_agence?.[agenceId];
+        stockDisplay.textContent = productInput.value ? (stockValue ?? 0) : '-';
+      }
+
+      function recalculateRow(row) {
+        const isDeleted = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        if (isDeleted && isDeleted.checked) {
+          return;
+        }
+        const qty = toNumber(row.querySelector('.line-qty')?.value);
+        const price = toNumber(row.querySelector('.line-price')?.value);
+        const tax = toNumber(row.querySelector('.line-tax')?.value);
+        const totalHt = qty * price;
+        const totalTax = totalHt * tax / 100;
+        const totalTtc = totalHt + totalTax;
+
+        setValue(row.querySelector('.line-total-ht'), totalHt);
+        setValue(row.querySelector('.line-total-tax'), totalTax);
+        setValue(row.querySelector('.line-total-ttc'), totalTtc);
+      }
+
+      function applyTypeDisplayRules() {
+        const isProduit = (typeAchatInput?.value || 'Produit') === 'Produit';
+
+        if (projectWrapper) {
+          projectWrapper.classList.toggle('d-none', isProduit);
+          const projectSelect = projectWrapper.querySelector('select');
+          if (isProduit && projectSelect) {
+            projectSelect.value = '';
+          }
+        }
+
+        container.querySelectorAll('[data-col-product], [data-col-stock]').forEach((cell) => {
+          cell.classList.toggle('d-none', !isProduit);
+        });
+      }
+
+      function recalculateDocumentTotals() {
+        let totalHt = 0;
+        let totalTva = 0;
+        let totalTtc = 0;
+
+        tbody.querySelectorAll('[data-line-row]').forEach((row) => {
+          const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+          if (deleteInput && deleteInput.checked) {
+            return;
+          }
+          totalHt += toNumber(row.querySelector('.line-total-ht')?.value);
+          totalTva += toNumber(row.querySelector('.line-total-tax')?.value);
+          totalTtc += toNumber(row.querySelector('.line-total-ttc')?.value);
+        });
+
+        setValue(totalHtInput, totalHt);
+        setValue(totalTvaInput, totalTva);
+        setValue(totalTtcInput, totalTtc);
+        setValue(remainingInput, Math.max(totalTtc - toNumber(paidInput?.value), 0));
+      }
+
+      function bindRow(row) {
+        const productInput = row.querySelector('.line-product');
+        const designationInput = row.querySelector('.line-designation');
+        if (productInput) {
+          productInput.addEventListener('change', () => {
+            const selected = productsMap[productInput.value];
+            const priceInput = row.querySelector('.line-price');
+            const taxInput = row.querySelector('.line-tax');
+            if (!selected) {
+              updateStockDisplay(row);
+              return;
+            }
+            if (priceInput && !toNumber(priceInput.value)) {
+              priceInput.value = Number.parseFloat(selected.prix_achat_ht || 0).toFixed(2);
+            }
+            if (taxInput && !toNumber(taxInput.value)) {
+              taxInput.value = Number.parseFloat(selected.taux_tva || 0).toFixed(2);
+            }
+            if (designationInput && !designationInput.value.trim()) {
+              designationInput.value = selected.nom_produit || '';
+            }
+            updateStockDisplay(row);
+            recalculateRow(row);
+            recalculateDocumentTotals();
+          });
+        }
+
+        row.querySelectorAll('.line-qty, .line-price, .line-tax, .line-designation').forEach((input) => {
+          input.addEventListener('input', () => {
+            recalculateRow(row);
+            recalculateDocumentTotals();
+          });
+        });
+
+        const removeButton = row.querySelector('[data-remove-line]');
+        if (removeButton) {
+          removeButton.addEventListener('click', () => {
+            const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (deleteInput) {
+              deleteInput.checked = true;
+              row.classList.add('d-none');
+            }
+            recalculateDocumentTotals();
+          });
+        }
+
+        updateStockDisplay(row);
+        recalculateRow(row);
+      }
+
+      addButton.addEventListener('click', () => {
+        const index = parseInt(totalForms.value, 10);
+        const template = document.querySelector('template[data-empty-row]').innerHTML
+          .replace(/__prefix__/g, index)
+          .replace('__ID_FIELD__', '{{ line_formset.empty_form.id|escapejs }}')
+          .replace('__PRODUCT_FIELD__', '{{ line_formset.empty_form.produit|escapejs }}')
+          .replace('__DESIGNATION_FIELD__', '{{ line_formset.empty_form.designation|escapejs }}')
+          .replace('__QTY_FIELD__', '{{ line_formset.empty_form.quantite|escapejs }}')
+          .replace('__PRICE_FIELD__', '{{ line_formset.empty_form.prix_unitaire_ht|escapejs }}')
+          .replace('__TAX_FIELD__', '{{ line_formset.empty_form.taux_tva|escapejs }}')
+          .replace('__TOTAL_HT_FIELD__', '{{ line_formset.empty_form.montant_ht|escapejs }}')
+          .replace('__TOTAL_TVA_FIELD__', '{{ line_formset.empty_form.montant_tva|escapejs }}')
+          .replace('__TOTAL_TTC_FIELD__', '{{ line_formset.empty_form.montant_ttc|escapejs }}')
+          .replace('__QTY_RECEIVED_FIELD__', '{{ line_formset.empty_form.quantite_recue|escapejs }}')
+          .replace('__DELETE_FIELD__', '{{ line_formset.empty_form.DELETE|escapejs }}');
+
+        tbody.insertAdjacentHTML('beforeend', template);
+        totalForms.value = index + 1;
+        const newRow = tbody.querySelectorAll('[data-line-row]')[tbody.querySelectorAll('[data-line-row]').length - 1];
+        bindRow(newRow);
+        recalculateDocumentTotals();
+      });
+
+      paidInput?.addEventListener('input', recalculateDocumentTotals);
+      typeAchatInput?.addEventListener('change', () => {
+        applyTypeDisplayRules();
+        tbody.querySelectorAll('[data-line-row]').forEach(updateStockDisplay);
+      });
+      agenceInput?.addEventListener('change', () => {
+        tbody.querySelectorAll('[data-line-row]').forEach(updateStockDisplay);
+      });
+      applyTypeDisplayRules();
+      tbody.querySelectorAll('[data-line-row]').forEach(bindRow);
+      recalculateDocumentTotals();
+    })();
+  </script>
 {% endblock %}

@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from .models import (
     Societe, Produit, Client, Facture, Agence, Categorie, Projet,
-    Fournisseur, Achat, Depense, Journal, EcritureComptable, Stock,
+    Fournisseur, Achat, LigneAchat, Depense, Journal, EcritureComptable, Stock,
     MouvementStock, Role, AppPermission, RolePermission,
-    UtilisateurProfile, ActivityLog
+    UtilisateurProfile, LigneVente, ActivityLog, Caisse, MouvementCaisse, LogActivite, Banque, MouvementBanque, PlanComptable, LigneEcriture
 )
 
 class SocieteSerializer(serializers.ModelSerializer):
@@ -24,6 +24,12 @@ class ClientSerializer(serializers.ModelSerializer):
 class FactureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Facture
+        fields = '__all__'
+
+
+class LigneVenteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LigneVente
         fields = '__all__'
 
 class AgenceSerializer(serializers.ModelSerializer):
@@ -51,6 +57,12 @@ class AchatSerializer(serializers.ModelSerializer):
         model = Achat
         fields = '__all__'
 
+
+class LigneAchatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LigneAchat
+        fields = '__all__'
+
 class DepenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Depense
@@ -64,6 +76,18 @@ class JournalSerializer(serializers.ModelSerializer):
 class EcritureComptableSerializer(serializers.ModelSerializer):
     class Meta:
         model = EcritureComptable
+        fields = '__all__'
+
+
+class PlanComptableSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlanComptable
+        fields = '__all__'
+
+
+class LigneEcritureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LigneEcriture
         fields = '__all__'
 
 class StockSerializer(serializers.ModelSerializer):
@@ -100,4 +124,34 @@ class UtilisateurProfileSerializer(serializers.ModelSerializer):
 class ActivityLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityLog
+        fields = '__all__'
+
+
+class CaisseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Caisse
+        fields = '__all__'
+
+
+class MouvementCaisseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MouvementCaisse
+        fields = '__all__'
+
+
+class LogActiviteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LogActivite
+        fields = '__all__'
+
+
+class BanqueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banque
+        fields = '__all__'
+
+
+class MouvementBanqueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MouvementBanque
         fields = '__all__'

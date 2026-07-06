@@ -7,12 +7,16 @@
           <h2 class="h4 mb-1">{{ title }}</h2>
           <p class="text-muted mb-0">Renseignez les informations de l'utilisateur.</p>
         </div>
+        <div class="standalone-tools">
+          <a href="{% url 'utilisateur_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
+        </div>
       </div>
 
       <div class="form-shell">
         <form method="post" action="{{ request.get_full_path }}">
           {% csrf_token %}
           <div class="row g-3">
+            {{ form.societe }}
             <div class="col-md-6">
               <label class="form-label fw-semibold">Nom utilisateur <span class="text-danger">*</span></label>
               {{ form.nom_utilisateur }}
@@ -36,10 +40,6 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Téléphone</label>
               {{ form.telephone }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Société <span class="text-danger">*</span></label>
-              {{ form.societe }}
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">Agence</label>

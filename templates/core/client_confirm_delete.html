@@ -7,7 +7,7 @@
       <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Confirmer la suppression</button>
-        <a href="{% url 'client_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
+        <a href="{% url 'client_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_contacts == '1' %}&from_contacts=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
       </form>
     </div>
   </div>

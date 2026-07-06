@@ -10,7 +10,7 @@
       <form method="post" class="mt-3">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Supprimer</button>
-        <a href="{% url 'categorie_list' %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-outline-secondary">Annuler</a>
+        <a href="{% url 'categorie_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_produits_stock == '1' %}&from_produits_stock=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-outline-secondary">Annuler</a>
       </form>
     </div>
   </div>

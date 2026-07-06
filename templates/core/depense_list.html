@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load number_format %}
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -25,12 +26,12 @@
           <tr>
             <td>{{ depense.reference }}</td>
             <td>{{ depense.description|truncatewords:5 }}</td>
-            <td>{{ depense.montant }} DA</td>
+            <td class="text-end">{{ depense.montant|format_amount }} DA</td>
             <td>{{ depense.date_depense|date:'d/m/Y' }}</td>
             <td>{{ depense.type_depense }}</td>
             <td class="text-end">
               <a href="{% url 'depense_update' depense.pk %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
-              <a href="{% url 'depense_delete' depense.pk %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+              <a href="{% url 'depense_delete' depense.pk %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
             </td>
           </tr>
         {% empty %}

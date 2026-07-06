@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="confirm-shell">
+      <h2 class="h5 mb-3">Supprimer une ligne d'écriture</h2>
+      <p>Confirmez-vous la suppression de la ligne <strong>{{ ligne.compte.numero_compte }}</strong> (écriture {{ ligne.ecriture.numero_ecriture|default:ligne.ecriture.reference }}) ?</p>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <a href="{% url 'ligne_ecriture_list' %}?standalone=1&embed=1&from_comptabilite=1{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}" class="btn btn-outline-secondary">Annuler</a>
+      </form>
+    </div>
+  </div>
+{% endblock %}

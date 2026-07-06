@@ -34,9 +34,8 @@
             <td>{% if societe.actif %}<span class="badge bg-success">Oui</span>{% else %}<span class="badge bg-secondary">Non</span>{% endif %}</td>
             <td class="text-end">
               <a href="{% url 'agence_list' %}?societe={{ societe.pk }}" class="btn btn-sm btn-outline-success me-2"><i class="fa-solid fa-building-user me-1"></i>Agences</a>
-              <a href="{% url 'agence_create' %}?societe={{ societe.pk }}" class="btn btn-sm btn-success me-2"><i class="fa-solid fa-plus me-1"></i>Agence</a>
               <a href="{% url 'societe_update' societe.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
-              <a href="{% url 'societe_delete' societe.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+              <a href="{% url 'societe_delete' societe.pk %}{% if request.GET.standalone == '1' %}?standalone=1{% endif %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
             </td>
           </tr>
         {% empty %}
