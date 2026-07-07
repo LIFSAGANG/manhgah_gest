@@ -1,9 +1,10 @@
 import json
 import re
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django import forms
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -22,6 +23,7 @@ from .middleware import permission_required, clear_permissions_cache
 def _redirect_with_standalone(request, route_name):
     url = reverse(route_name)
     params = []
+    journal_id = (request.POST.get('journal') or request.GET.get('journal') or '').strip()
     
     if request.GET.get('standalone') == '1':
         params.append('standalone=1')
@@ -41,6 +43,8 @@ def _redirect_with_standalone(request, route_name):
         params.append('from_comptabilite=1')
     if request.GET.get('societe'):
         params.append(f"societe={request.GET.get('societe')}")
+    if journal_id and route_name == 'ecriture_list':
+        params.append(f'journal={journal_id}')
     
     if params:
         return redirect(f'{url}?{"&".join(params)}')
@@ -64,6 +68,20 @@ def _get_selected_societe_id(request, accessible_societes):
     if raw_societe and accessible_societes.filter(pk=raw_societe).exists():
         return int(raw_societe)
     return accessible_societes.values_list('id', flat=True).first()
+
+
+def _amount_to_int(value):
+    if value in (None, ''):
+        return 0
+    try:
+        return int(Decimal(str(value)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+    except (InvalidOperation, TypeError, ValueError):
+        return 0
+
+
+def _amount_to_display(value):
+    amount = _amount_to_int(value)
+    return '' if amount == 0 else str(amount)
 
 
 def _configure_form_for_societe(form, user, selected_societe_id):
@@ -138,7 +156,13 @@ def _configure_form_for_societe(form, user, selected_societe_id):
 
     if 'utilisateur' in form.fields:
         if selected_societe_id:
-            form.fields['utilisateur'].queryset = UtilisateurProfile.objects.filter(societe_id=selected_societe_id, actif=True).order_by('nom', 'prenom')
+            user_profile_id = getattr(getattr(user, 'utilisateurprofile', None), 'pk', None)
+            current_instance_user_id = getattr(getattr(form, 'instance', None), 'utilisateur_id', None)
+            form.fields['utilisateur'].queryset = UtilisateurProfile.objects.filter(
+                Q(societe_id=selected_societe_id, actif=True)
+                | Q(pk=user_profile_id)
+                | Q(pk=current_instance_user_id)
+            ).distinct().order_by('nom', 'prenom')
         else:
             form.fields['utilisateur'].queryset = UtilisateurProfile.objects.none()
 
@@ -1116,11 +1140,46 @@ def plan_comptable_page(request):
     else:
         comptes = comptes.none()
     comptes = comptes.order_by('numero_compte')
+
     return render(
         request,
         'core/plan_comptable_page.html',
         {
             'comptes': comptes,
+            'selected_societe_id': selected_societe_id,
+        },
+    )
+
+
+@login_required
+def comptes_generaux_page(request):
+    societes = _get_accessible_societes(request.user)
+    selected_societe_id = _get_selected_societe_id(request, societes)
+    comptes_mouvementes = (
+        LigneEcriture.objects
+        .select_related('compte', 'ecriture')
+        .values('compte_id', 'compte__numero_compte', 'compte__nom_compte')
+        .annotate(
+            total_debit=Coalesce(Sum('debit'), Value(0, output_field=DecimalField(max_digits=14, decimal_places=2))),
+            total_credit=Coalesce(Sum('credit'), Value(0, output_field=DecimalField(max_digits=14, decimal_places=2))),
+        )
+        .annotate(solde=F('total_debit') - F('total_credit'))
+        .order_by('compte__numero_compte')
+    )
+
+    if selected_societe_id:
+        comptes_mouvementes = comptes_mouvementes.filter(
+            compte__societe_id=selected_societe_id,
+            ecriture__societe_id=selected_societe_id,
+        )
+    else:
+        comptes_mouvementes = comptes_mouvementes.none()
+
+    return render(
+        request,
+        'core/comptes_generaux_page.html',
+        {
+            'comptes_mouvementes': comptes_mouvementes,
             'selected_societe_id': selected_societe_id,
         },
     )
@@ -1301,12 +1360,175 @@ def code_journaux_page(request):
 def brouillard_page(request):
     societes = _get_accessible_societes(request.user)
     selected_societe_id = _get_selected_societe_id(request, societes)
+    selected_societe = societes.filter(pk=selected_societe_id).first() if selected_societe_id else None
+    compte_debut = (request.GET.get('compte_debut') or '').strip()
+    compte_fin = (request.GET.get('compte_fin') or '').strip()
+    journal_debut = (request.GET.get('journal_debut') or '').strip()
+    journal_fin = (request.GET.get('journal_fin') or '').strip()
+    date_debut = (request.GET.get('date_debut') or '').strip()
+    date_fin = (request.GET.get('date_fin') or '').strip()
+    export_format = (request.GET.get('export') or '').strip().lower()
+
     ecritures = EcritureComptable.objects.select_related('journal').prefetch_related('lignes__compte').annotate(total_debit=Sum('lignes__debit'), total_credit=Sum('lignes__credit')).order_by('-date_ecriture', '-id')
     if selected_societe_id:
         ecritures = ecritures.filter(societe_id=selected_societe_id)
     else:
         ecritures = ecritures.none()
-    return render(request, 'core/brouillard_page.html', {'ecritures': ecritures[:100]})
+
+    if journal_debut:
+        ecritures = ecritures.filter(journal__code__gte=journal_debut)
+    if journal_fin:
+        ecritures = ecritures.filter(journal__code__lte=journal_fin)
+    if date_debut:
+        ecritures = ecritures.filter(date_ecriture__gte=date_debut)
+    if date_fin:
+        ecritures = ecritures.filter(date_ecriture__lte=date_fin)
+    if compte_debut:
+        ecritures = ecritures.filter(lignes__compte__numero_compte__gte=compte_debut)
+    if compte_fin:
+        ecritures = ecritures.filter(lignes__compte__numero_compte__lte=compte_fin)
+
+    ecritures = ecritures.distinct()
+    lignes_export = LigneEcriture.objects.select_related(
+        'ecriture',
+        'ecriture__journal',
+        'ecriture__client',
+        'ecriture__fournisseur',
+        'compte',
+    ).filter(ecriture_id__in=ecritures.values_list('id', flat=True)).order_by('ecriture__date_ecriture', 'ecriture__id', 'id')
+
+    if export_format == 'pdf':
+        from io import BytesIO
+
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import landscape, A4
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+
+        buffer = BytesIO()
+        document = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(A4),
+            leftMargin=18,
+            rightMargin=18,
+            topMargin=18,
+            bottomMargin=18,
+        )
+        styles = getSampleStyleSheet()
+        story = []
+
+        societe_label = 'Toutes les sociétés'
+        if selected_societe:
+            societe_label = f"{selected_societe.raison_sociale} ({selected_societe.code_societe})"
+        period_label = f"Du {date_debut or '-'} au {date_fin or '-'}"
+        filtre_parts = [f"Période: {period_label}"]
+        if compte_debut or compte_fin:
+            filtre_parts.append(f"Comptes: {compte_debut or '-'} à {compte_fin or '-'}")
+        if journal_debut or journal_fin:
+            filtre_parts.append(f"Journaux: {journal_debut or '-'} à {journal_fin or '-'}")
+
+        story.append(Paragraph('Brouillard de saisie - Détail des lignes', styles['Title']))
+        story.append(Spacer(1, 8))
+        story.append(Paragraph(f"Société: {societe_label}", styles['Normal']))
+        story.append(Paragraph('Filtres: ' + ' | '.join(filtre_parts), styles['Normal']))
+        story.append(Spacer(1, 10))
+
+        table_data = [[
+            'Code journal',
+            'Date',
+            'Pièce',
+            'Compte',
+            'Code tiers',
+            'Intitulé',
+            'Débit',
+            'Crédit',
+        ]]
+        for ligne in lignes_export:
+            code_tiers = getattr(getattr(ligne.ecriture, 'client', None), 'code_client', '') or getattr(getattr(ligne.ecriture, 'fournisseur', None), 'code_fournisseur', '') or '-'
+            table_data.append([
+                ligne.ecriture.journal.code if ligne.ecriture.journal else '-',
+                ligne.ecriture.date_ecriture.strftime('%d/%m/%Y') if ligne.ecriture.date_ecriture else '',
+                ligne.ecriture.numero_ecriture or ligne.ecriture.reference or '',
+                f"{ligne.compte.numero_compte} - {ligne.compte.nom_compte}",
+                code_tiers,
+                ligne.ecriture.libelle_ecriture or ligne.ecriture.intitule or '',
+                _amount_to_display(ligne.debit),
+                _amount_to_display(ligne.credit),
+            ])
+
+        table = Table(table_data, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f2937')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('LEADING', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#cbd5e1')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (6, 1), (-1, -1), 'RIGHT'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
+        document.build(story)
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename=brouillard_saisie_{timezone.localdate().year}.pdf'
+        return response
+
+    if export_format == 'excel':
+        response = HttpResponse(content_type='application/vnd.ms-excel; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename=brouillard_saisie_{timezone.localdate().year}.xls'
+        columns = ['Code journal', 'Date', 'Pièce', 'Compte', 'Code tiers', 'Intitulé', 'Débit', 'Crédit']
+        rows = [
+            '<tr>' + ''.join(f'<th>{col}</th>' for col in columns) + '</tr>'
+        ]
+        for ligne in lignes_export:
+            code_tiers = '-'
+            if ligne.ecriture.client:
+                code_tiers = ligne.ecriture.client.code or ligne.ecriture.client.code_client or '-'
+            elif ligne.ecriture.fournisseur:
+                code_tiers = ligne.ecriture.fournisseur.code or ligne.ecriture.fournisseur.code_fournisseur or '-'
+            debit_value = _amount_to_int(ligne.debit)
+            credit_value = _amount_to_int(ligne.credit)
+            debit_cell = '<td></td>' if debit_value == 0 else f"<td x:num=\"{debit_value}\" style=\"mso-number-format:'0';text-align:right;\">{debit_value}</td>"
+            credit_cell = '<td></td>' if credit_value == 0 else f"<td x:num=\"{credit_value}\" style=\"mso-number-format:'0';text-align:right;\">{credit_value}</td>"
+            rows.append(
+                '<tr>'
+                f"<td>{ligne.ecriture.journal.code if ligne.ecriture.journal else '-'}</td>"
+                f"<td>{ligne.ecriture.date_ecriture.strftime('%d/%m/%Y') if ligne.ecriture.date_ecriture else ''}</td>"
+                f"<td>{ligne.ecriture.numero_ecriture or ligne.ecriture.reference or ''}</td>"
+                f"<td>{ligne.compte.numero_compte} - {ligne.compte.nom_compte}</td>"
+                f"<td>{code_tiers}</td>"
+                f"<td>{ligne.ecriture.libelle_ecriture or ligne.ecriture.intitule or ''}</td>"
+                f"{debit_cell}"
+                f"{credit_cell}"
+                '</tr>'
+            )
+        response.write('<html><head><meta charset="utf-8"></head><body><table border="1">')
+        response.write(''.join(rows))
+        response.write('</table></body></html>')
+        return response
+
+    return render(
+        request,
+        'core/brouillard_page.html',
+        {
+            'ecritures': ecritures[:100],
+            'compte_debut': compte_debut,
+            'compte_fin': compte_fin,
+            'journal_debut': journal_debut,
+            'journal_fin': journal_fin,
+            'date_debut': date_debut,
+            'date_fin': date_fin,
+            'selected_societe': selected_societe,
+        },
+    )
 
 
 @login_required
@@ -1330,27 +1552,422 @@ def etat_journaux_page(request):
 def balance_comptes_page(request):
     societes = _get_accessible_societes(request.user)
     selected_societe_id = _get_selected_societe_id(request, societes)
-    balances = PlanComptable.objects.all()
+    compte_debut = (request.GET.get('compte_debut') or '').strip()
+    compte_fin = (request.GET.get('compte_fin') or '').strip()
+    journal_debut = (request.GET.get('journal_debut') or '').strip()
+    journal_fin = (request.GET.get('journal_fin') or '').strip()
+    date_debut = (request.GET.get('date_debut') or '').strip()
+    date_fin = (request.GET.get('date_fin') or '').strip()
+    type_balance = (request.GET.get('type_balance') or '6').strip()
+    export_format = (request.GET.get('export') or '').strip().lower()
+    annee_n = timezone.localdate().year
+    debut_annee = timezone.localdate().replace(month=1, day=1)
+
+    if type_balance not in {'4', '6'}:
+        type_balance = '6'
+
+    lignes = LigneEcriture.objects.select_related('compte', 'ecriture__journal')
     if selected_societe_id:
-        balances = balances.filter(societe_id=selected_societe_id)
+        lignes = lignes.filter(compte__societe_id=selected_societe_id)
     else:
-        balances = balances.none()
-    balances = balances.values('numero_compte', 'nom_compte').annotate(total_debit=Sum('lignes_ecriture__debit'), total_credit=Sum('lignes_ecriture__credit')).order_by('numero_compte')
+        lignes = lignes.none()
+
+    if compte_debut:
+        lignes = lignes.filter(compte__numero_compte__gte=compte_debut)
+    if compte_fin:
+        lignes = lignes.filter(compte__numero_compte__lte=compte_fin)
+    if journal_debut:
+        lignes = lignes.filter(ecriture__journal__code__gte=journal_debut)
+    if journal_fin:
+        lignes = lignes.filter(ecriture__journal__code__lte=journal_fin)
+
+    ouverture_limite = debut_annee
+    mouvement_q = Q(ecriture__date_ecriture__gte=debut_annee)
+    if date_debut:
+        ouverture_limite = date_debut
+        mouvement_q = Q(ecriture__date_ecriture__gte=date_debut)
+    if date_fin:
+        mouvement_q &= Q(ecriture__date_ecriture__lte=date_fin)
+
+    balances = list(
+        lignes.values('compte__numero_compte', 'compte__nom_compte')
+        .annotate(
+            ouverture_debit=Coalesce(
+                Sum('debit', filter=Q(ecriture__date_ecriture__lt=ouverture_limite)),
+                Value(0, output_field=DecimalField(max_digits=14, decimal_places=2)),
+            ),
+            ouverture_credit=Coalesce(
+                Sum('credit', filter=Q(ecriture__date_ecriture__lt=ouverture_limite)),
+                Value(0, output_field=DecimalField(max_digits=14, decimal_places=2)),
+            ),
+            mouvement_debit=Coalesce(
+                Sum('debit', filter=mouvement_q),
+                Value(0, output_field=DecimalField(max_digits=14, decimal_places=2)),
+            ),
+            mouvement_credit=Coalesce(
+                Sum('credit', filter=mouvement_q),
+                Value(0, output_field=DecimalField(max_digits=14, decimal_places=2)),
+            ),
+        )
+        .order_by('compte__numero_compte')
+    )
+
+    periode_debut_label = date_debut or debut_annee.strftime('%Y-%m-%d')
+    periode_fin_label = date_fin or timezone.localdate().strftime('%Y-%m-%d')
+
     for ligne in balances:
-        ligne['solde'] = (ligne['total_debit'] or 0) - (ligne['total_credit'] or 0)
-    return render(request, 'core/balance_comptes_page.html', {'balances': balances})
+        periode_debit = (ligne['ouverture_debit'] or 0) + (ligne['mouvement_debit'] or 0)
+        periode_credit = (ligne['ouverture_credit'] or 0) + (ligne['mouvement_credit'] or 0)
+        solde_cloture = periode_debit - periode_credit
+        ligne['periode_debit'] = periode_debit
+        ligne['periode_credit'] = periode_credit
+        ligne['solde_ouverture_debit'] = ligne['ouverture_debit'] or 0
+        ligne['solde_ouverture_credit'] = ligne['ouverture_credit'] or 0
+        ligne['solde_mouvement_debit'] = ligne['mouvement_debit'] or 0
+        ligne['solde_mouvement_credit'] = ligne['mouvement_credit'] or 0
+        ligne['solde_cloture_debit'] = solde_cloture if solde_cloture > 0 else 0
+        ligne['solde_cloture_credit'] = abs(solde_cloture) if solde_cloture < 0 else 0
+        ligne['numero_compte'] = ligne.pop('compte__numero_compte')
+        ligne['nom_compte'] = ligne.pop('compte__nom_compte')
+
+    if export_format == 'pdf':
+        from io import BytesIO
+
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import landscape, A4
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+
+        buffer = BytesIO()
+        document = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(A4),
+            leftMargin=18,
+            rightMargin=18,
+            topMargin=18,
+            bottomMargin=18,
+        )
+        styles = getSampleStyleSheet()
+        story = []
+        societe = Societe.objects.filter(pk=selected_societe_id).only('raison_sociale', 'code_societe').first() if selected_societe_id else None
+        period_debut = '/'.join(reversed(periode_debut_label.split('-'))) if '-' in periode_debut_label else periode_debut_label
+        period_fin = '/'.join(reversed(periode_fin_label.split('-'))) if '-' in periode_fin_label else periode_fin_label
+        filtre_parts = []
+        if compte_debut or compte_fin:
+            filtre_parts.append(f"Comptes: {compte_debut or '-'} à {compte_fin or '-'}")
+        if journal_debut or journal_fin:
+            filtre_parts.append(f"Journaux: {journal_debut or '-'} à {journal_fin or '-'}")
+        filtre_parts.append(f"Type: {type_balance} colonnes")
+
+        story.append(Paragraph(f"Balance des comptes - Année {annee_n}", styles['Title']))
+        story.append(Spacer(1, 8))
+        societe_label = 'Toutes les sociétés'
+        if societe:
+            societe_label = f"{societe.raison_sociale} ({societe.code_societe})"
+        story.append(Paragraph(f"Société: {societe_label}", styles['Normal']))
+        story.append(Paragraph(f"Période: du {period_debut} au {period_fin}", styles['Normal']))
+        story.append(Paragraph('Filtres: ' + ' | '.join(filtre_parts), styles['Normal']))
+        story.append(Spacer(1, 10))
+
+        if type_balance == '6':
+            table_data = [[
+                'Compte',
+                'Ouverture débit',
+                'Ouverture crédit',
+                'Mouvements débit',
+                'Mouvements crédit',
+                'Clôture débit',
+                'Clôture crédit',
+            ]]
+            for ligne in balances:
+                table_data.append([
+                    f"{ligne['numero_compte']} - {ligne['nom_compte']}",
+                    _amount_to_display(ligne['solde_ouverture_debit']),
+                    _amount_to_display(ligne['solde_ouverture_credit']),
+                    _amount_to_display(ligne['solde_mouvement_debit']),
+                    _amount_to_display(ligne['solde_mouvement_credit']),
+                    _amount_to_display(ligne['solde_cloture_debit']),
+                    _amount_to_display(ligne['solde_cloture_credit']),
+                ])
+        else:
+            table_data = [[
+                'Compte',
+                'Ouverture + mouvements débit',
+                'Ouverture + mouvements crédit',
+                'Clôture débit',
+                'Clôture crédit',
+            ]]
+            for ligne in balances:
+                table_data.append([
+                    f"{ligne['numero_compte']} - {ligne['nom_compte']}",
+                    _amount_to_display(ligne['periode_debit']),
+                    _amount_to_display(ligne['periode_credit']),
+                    _amount_to_display(ligne['solde_cloture_debit']),
+                    _amount_to_display(ligne['solde_cloture_credit']),
+                ])
+
+        table = Table(table_data, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f2937')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('LEADING', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#cbd5e1')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
+        document.build(story)
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename=balance_comptable_{annee_n}.pdf'
+        return response
+
+    if export_format == 'excel':
+        response = HttpResponse(content_type='application/vnd.ms-excel; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename=balance_comptable_{annee_n}.xls'
+        columns = ['Compte', 'Intitulé']
+        if type_balance == '6':
+            columns.extend(['Ouverture débit', 'Ouverture crédit', 'Mouvements débit', 'Mouvements crédit', 'Clôture débit', 'Clôture crédit'])
+        else:
+            columns.extend(['Ouverture + mouvements débit', 'Ouverture + mouvements crédit', 'Clôture débit', 'Clôture crédit'])
+        rows = [
+            '<tr>' + ''.join(f'<th>{col}</th>' for col in columns) + '</tr>'
+        ]
+        for ligne in balances:
+            current = [
+                ligne['numero_compte'],
+                ligne['nom_compte'],
+            ]
+            if type_balance == '6':
+                current.extend([
+                    _amount_to_display(ligne['solde_ouverture_debit']),
+                    _amount_to_display(ligne['solde_ouverture_credit']),
+                    _amount_to_display(ligne['solde_mouvement_debit']),
+                    _amount_to_display(ligne['solde_mouvement_credit']),
+                    _amount_to_display(ligne['solde_cloture_debit']),
+                    _amount_to_display(ligne['solde_cloture_credit']),
+                ])
+            else:
+                current.extend([
+                    _amount_to_display(ligne['periode_debit']),
+                    _amount_to_display(ligne['periode_credit']),
+                    _amount_to_display(ligne['solde_cloture_debit']),
+                    _amount_to_display(ligne['solde_cloture_credit']),
+                ])
+            rows.append('<tr>' + ''.join(f'<td>{value}</td>' for value in current) + '</tr>')
+        response.write('<html><head><meta charset="utf-8"></head><body><table border="1">')
+        response.write(''.join(rows))
+        response.write('</table></body></html>')
+        return response
+
+    context = {
+        'balances': balances,
+        'compte_debut': compte_debut,
+        'compte_fin': compte_fin,
+        'journal_debut': journal_debut,
+        'journal_fin': journal_fin,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'type_balance': type_balance if type_balance in {'4', '6'} else '6',
+        'annee_n': annee_n,
+        'print_mode': export_format == 'pdf',
+    }
+    return render(request, 'core/balance_comptes_page.html', context)
 
 
 @login_required
 def grand_livre_page(request):
     societes = _get_accessible_societes(request.user)
     selected_societe_id = _get_selected_societe_id(request, societes)
+    selected_societe = societes.filter(pk=selected_societe_id).first() if selected_societe_id else None
+    compte_debut = (request.GET.get('compte_debut') or '').strip()
+    compte_fin = (request.GET.get('compte_fin') or '').strip()
+    journal_debut = (request.GET.get('journal_debut') or '').strip()
+    journal_fin = (request.GET.get('journal_fin') or '').strip()
+    date_debut = (request.GET.get('date_debut') or '').strip()
+    date_fin = (request.GET.get('date_fin') or '').strip()
+    export_format = (request.GET.get('export') or '').strip().lower()
+
     lignes = LigneEcriture.objects.select_related('ecriture', 'ecriture__journal', 'ecriture__client', 'ecriture__fournisseur', 'compte').order_by('compte__numero_compte', 'ecriture__date_ecriture', 'id')
     if selected_societe_id:
         lignes = lignes.filter(ecriture__societe_id=selected_societe_id)
     else:
         lignes = lignes.none()
-    return render(request, 'core/grand_livre_page.html', {'lignes': lignes[:200]})
+
+    if compte_debut:
+        lignes = lignes.filter(compte__numero_compte__gte=compte_debut)
+    if compte_fin:
+        lignes = lignes.filter(compte__numero_compte__lte=compte_fin)
+    if journal_debut:
+        lignes = lignes.filter(ecriture__journal__code__gte=journal_debut)
+    if journal_fin:
+        lignes = lignes.filter(ecriture__journal__code__lte=journal_fin)
+    if date_debut:
+        lignes = lignes.filter(ecriture__date_ecriture__gte=date_debut)
+    if date_fin:
+        lignes = lignes.filter(ecriture__date_ecriture__lte=date_fin)
+
+    lignes = list(lignes[:500])
+    last_compte = None
+    solde_progressif = 0
+    for ligne in lignes:
+        compte_key = ligne.compte.numero_compte
+        if compte_key != last_compte:
+            solde_progressif = 0
+            last_compte = compte_key
+        solde_progressif += (ligne.debit or 0) - (ligne.credit or 0)
+        ligne.solde_progressif = solde_progressif
+
+    annee_n = timezone.localdate().year
+    period_label = 'Toutes les dates'
+    if date_debut or date_fin:
+        period_label = f"Du {date_debut or '-'} au {date_fin or '-'}"
+
+    if export_format == 'pdf':
+        from io import BytesIO
+
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import landscape, A4
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+
+        buffer = BytesIO()
+        document = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(A4),
+            leftMargin=18,
+            rightMargin=18,
+            topMargin=18,
+            bottomMargin=18,
+        )
+        styles = getSampleStyleSheet()
+        story = []
+
+        societe_label = 'Toutes les sociétés'
+        if selected_societe:
+            societe_label = f"{selected_societe.raison_sociale} ({selected_societe.code_societe})"
+        filtre_parts = [f"Période: {period_label}"]
+        if compte_debut or compte_fin:
+            filtre_parts.append(f"Comptes: {compte_debut or '-'} à {compte_fin or '-'}")
+        if journal_debut or journal_fin:
+            filtre_parts.append(f"Journaux: {journal_debut or '-'} à {journal_fin or '-'}")
+
+        story.append(Paragraph('Grand livre', styles['Title']))
+        story.append(Spacer(1, 8))
+        story.append(Paragraph(f"Société: {societe_label}", styles['Normal']))
+        story.append(Paragraph('Filtres: ' + ' | '.join(filtre_parts), styles['Normal']))
+        story.append(Spacer(1, 10))
+
+        table_data = [[
+            'Code journaux',
+            'Date',
+            'Pièce',
+            'Compte',
+            'Code tiers',
+            'Intitulés',
+            'Débit',
+            'Crédit',
+            'Solde progressif',
+        ]]
+        for ligne in lignes:
+            table_data.append([
+                ligne.ecriture.journal.code if ligne.ecriture.journal else '-',
+                ligne.ecriture.date_ecriture.strftime('%d/%m/%Y') if ligne.ecriture.date_ecriture else '',
+                ligne.ecriture.numero_ecriture or ligne.ecriture.reference or '',
+                f"{ligne.compte.numero_compte} - {ligne.compte.nom_compte}",
+                getattr(getattr(ligne.ecriture, 'client', None), 'code_client', '') or getattr(getattr(ligne.ecriture, 'fournisseur', None), 'code_fournisseur', '') or '-',
+                ligne.ecriture.libelle_ecriture or ligne.ecriture.intitule or '',
+                _amount_to_display(ligne.debit),
+                _amount_to_display(ligne.credit),
+                _amount_to_display(ligne.solde_progressif),
+            ])
+
+        table = Table(table_data, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f2937')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('LEADING', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#cbd5e1')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (6, 1), (-1, -1), 'RIGHT'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
+        document.build(story)
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename=grand_livre_{annee_n}.pdf'
+        return response
+
+    if export_format == 'excel':
+        response = HttpResponse(content_type='application/vnd.ms-excel; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename=grand_livre_{annee_n}.xls'
+        columns = ['Code journaux', 'Date', 'Pièce', 'Compte', 'Code tiers', 'Intitulés', 'Débit', 'Crédit', 'Solde progressif']
+        rows = [
+            '<tr>' + ''.join(f'<th>{col}</th>' for col in columns) + '</tr>'
+        ]
+        for ligne in lignes:
+            code_tiers = '-'
+            if ligne.ecriture.client:
+                code_tiers = ligne.ecriture.client.code or ligne.ecriture.client.code_client or '-'
+            elif ligne.ecriture.fournisseur:
+                code_tiers = ligne.ecriture.fournisseur.code or ligne.ecriture.fournisseur.code_fournisseur or '-'
+            debit_value = _amount_to_int(ligne.debit)
+            credit_value = _amount_to_int(ligne.credit)
+            solde_value = _amount_to_int(ligne.solde_progressif)
+            debit_cell = '<td></td>' if debit_value == 0 else f"<td x:num=\"{debit_value}\" style=\"mso-number-format:'0';text-align:right;\">{debit_value}</td>"
+            credit_cell = '<td></td>' if credit_value == 0 else f"<td x:num=\"{credit_value}\" style=\"mso-number-format:'0';text-align:right;\">{credit_value}</td>"
+            solde_cell = '<td></td>' if solde_value == 0 else f"<td x:num=\"{solde_value}\" style=\"mso-number-format:'0';text-align:right;\">{solde_value}</td>"
+            rows.append(
+                '<tr>'
+                f"<td>{ligne.ecriture.journal.code if ligne.ecriture.journal else '-'}</td>"
+                f"<td>{ligne.ecriture.date_ecriture.strftime('%d/%m/%Y') if ligne.ecriture.date_ecriture else ''}</td>"
+                f"<td>{ligne.ecriture.numero_ecriture or ligne.ecriture.reference or ''}</td>"
+                f"<td>{ligne.compte.numero_compte}</td>"
+                f"<td>{code_tiers}</td>"
+                f"<td>{ligne.ecriture.libelle_ecriture or ligne.ecriture.intitule or ''}</td>"
+                f"{debit_cell}"
+                f"{credit_cell}"
+                f"{solde_cell}"
+                '</tr>'
+            )
+        response.write('<html><head><meta charset="utf-8"></head><body><table border="1">')
+        response.write(''.join(rows))
+        response.write('</table></body></html>')
+        return response
+
+    return render(
+        request,
+        'core/grand_livre_page.html',
+        {
+            'lignes': lignes,
+            'compte_debut': compte_debut,
+            'compte_fin': compte_fin,
+            'journal_debut': journal_debut,
+            'journal_fin': journal_fin,
+            'date_debut': date_debut,
+            'date_fin': date_fin,
+            'selected_societe': selected_societe,
+            'period_label': period_label,
+        },
+    )
 
 
 @login_required

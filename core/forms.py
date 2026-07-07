@@ -691,20 +691,37 @@ class LigneEcritureForm(forms.ModelForm):
         widgets = {
             'ecriture': forms.Select(attrs={'class': 'form-select'}),
             'compte': forms.Select(attrs={'class': 'form-select'}),
-            'debit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'credit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'debit': forms.NumberInput(attrs={'class': 'form-control', 'step': '1'}),
+            'credit': forms.NumberInput(attrs={'class': 'form-control', 'step': '1'}),
         }
+
+    def clean_debit(self):
+        debit = self.cleaned_data.get('debit')
+        return debit if debit is not None else Decimal('0')
+
+    def clean_credit(self):
+        credit = self.cleaned_data.get('credit')
+        return credit if credit is not None else Decimal('0')
 
 
 class LigneEcritureInlineForm(forms.ModelForm):
+    debit = forms.DecimalField(required=False, decimal_places=0, max_digits=14, widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '1', 'min': '0'}))
+    credit = forms.DecimalField(required=False, decimal_places=0, max_digits=14, widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '1', 'min': '0'}))
+    
     class Meta:
         model = LigneEcriture
         fields = ['compte', 'debit', 'credit']
         widgets = {
             'compte': forms.Select(attrs={'class': 'form-select form-select-sm'}),
-            'debit': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01', 'min': '0'}),
-            'credit': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01', 'min': '0'}),
         }
+
+    def clean_debit(self):
+        debit = self.cleaned_data.get('debit')
+        return debit if debit is not None else Decimal('0')
+
+    def clean_credit(self):
+        credit = self.cleaned_data.get('credit')
+        return credit if credit is not None else Decimal('0')
 
     def clean(self):
         cleaned = super().clean()
@@ -722,11 +739,12 @@ class LigneEcritureInlineForm(forms.ModelForm):
         if not compte:
             self.add_error('compte', 'Le compte est obligatoire.')
 
-        if debit <= 0 and credit <= 0:
-            raise forms.ValidationError('Saisissez un débit ou un crédit supérieur à zéro.')
+        # Une ligne d'écriture doit avoir soit débit soit crédit (un seul, pas les deux)
+        if debit == 0 and credit == 0:
+            raise forms.ValidationError('Vous devez saisir un montant en débit ou en crédit.')
 
         if debit > 0 and credit > 0:
-            raise forms.ValidationError('Une ligne ne peut pas avoir débit et crédit en même temps.')
+            raise forms.ValidationError('Une ligne d\'écriture ne peut pas avoir à la fois un débit et un crédit.')
 
         return cleaned
 
@@ -748,6 +766,10 @@ class BaseLigneEcritureFormSet(BaseInlineFormSet):
             compte = cleaned.get('compte')
             debit = Decimal(cleaned.get('debit') or 0)
             credit = Decimal(cleaned.get('credit') or 0)
+
+            # Défense supplémentaire: éviter toute propagation de valeur NULL à la sauvegarde.
+            cleaned['debit'] = debit
+            cleaned['credit'] = credit
 
             if not (compte or debit or credit):
                 continue

@@ -55,7 +55,7 @@
           <button class="btn nav-btn dropdown-toggle active" type="button" id="btn-traitement" data-bs-toggle="dropdown" aria-expanded="false">Traitement</button>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'ecriture_list' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Journaux de saisie</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'plan_comptable_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Gestion des comptes généraux</a></li>
+            <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'comptes_generaux_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Gestion des comptes généraux</a></li>
             <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'ligne_ecriture_list' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Lignes d'écriture</a></li>
             <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'comptes_tiers_gestion_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Gestion des comptes tiers</a></li>
             <li><a class="dropdown-item" href="#" onclick="loadContent(event, '{% url 'recherche_ecriture_page' %}?standalone=1&embed=1&from_comptabilite=1'); setActiveButton('traitement');">Recherche d'écriture</a></li>

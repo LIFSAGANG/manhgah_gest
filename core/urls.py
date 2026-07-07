@@ -36,6 +36,7 @@ urlpatterns = [
     path('comptabilite/', views.comptabilite_page, name='comptabilite_page'),
     path('comptabilite/etat/', views.etat_comptabilite_page, name='etat_comptabilite_page'),
     path('comptabilite/plan-comptable/', views.plan_comptable_page, name='plan_comptable_page'),
+    path('comptabilite/comptes-generaux/', views.comptes_generaux_page, name='comptes_generaux_page'),
     path('comptabilite/plan-comptable/importer/', views.plan_comptable_import, name='plan_comptable_import'),
     path('comptabilite/plan-comptable/ajouter/', views.plan_comptable_create, name='plan_comptable_create'),
     path('comptabilite/plan-comptable/<int:pk>/modifier/', views.plan_comptable_update, name='plan_comptable_update'),

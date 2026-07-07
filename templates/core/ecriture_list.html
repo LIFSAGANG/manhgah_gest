@@ -172,7 +172,7 @@
                     {% endif %}
                   </td>
                   <td class="text-end">
-                    <a href="{% url 'ecriture_update' ecriture.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
+                    <a href="{% url 'ecriture_update' ecriture.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% if selected_journal %}&journal={{ selected_journal }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-primary me-2">Modifier</a>
                     <a href="{% url 'ecriture_delete' ecriture.pk %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-danger js-delete-link">Supprimer</a>
                   </td>
                 </tr>

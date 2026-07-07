@@ -8,6 +8,25 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+      .table-sortable thead th.sortable-col {
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .table-sortable thead th.sortable-col .sort-indicator {
+        display: inline-block;
+        margin-left: 0.35rem;
+        color: #64748b;
+        font-size: 0.8em;
+      }
+
+      .table-sortable thead th.sortable-col.sort-asc .sort-indicator,
+      .table-sortable thead th.sortable-col.sort-desc .sort-indicator {
+        color: #0f172a;
+      }
+    </style>
     {% if request.GET.standalone == '1' %}
       <style>
         * {
@@ -461,5 +480,157 @@
       }, true);
     </script>
     {% endif %}
+
+    <script>
+      (function () {
+        function normalizeText(value) {
+          return (value || '').replace(/\s|\u00A0/g, '').trim();
+        }
+
+        function parseNumber(value) {
+          const normalized = normalizeText(value).replace(',', '.');
+          if (!normalized) {
+            return null;
+          }
+          const number = Number(normalized);
+          return Number.isFinite(number) ? number : null;
+        }
+
+        function parseDate(value) {
+          const text = (value || '').trim();
+          const match = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+          if (!match) {
+            return null;
+          }
+          const day = Number(match[1]);
+          const month = Number(match[2]) - 1;
+          const year = Number(match[3]);
+          const timestamp = new Date(year, month, day).getTime();
+          return Number.isFinite(timestamp) ? timestamp : null;
+        }
+
+        function getCellValue(row, index) {
+          const cell = row.children[index];
+          if (!cell) {
+            return '';
+          }
+          return (cell.innerText || cell.textContent || '').trim();
+        }
+
+        function detectSortType(rows, index) {
+          for (const row of rows) {
+            const value = getCellValue(row, index);
+            if (!value) {
+              continue;
+            }
+            if (parseDate(value) !== null) {
+              return 'date';
+            }
+            if (parseNumber(value) !== null) {
+              return 'number';
+            }
+            return 'text';
+          }
+          return 'text';
+        }
+
+        function compareValues(a, b, type) {
+          if (!a && !b) {
+            return 0;
+          }
+          if (!a) {
+            return 1;
+          }
+          if (!b) {
+            return -1;
+          }
+
+          if (type === 'number') {
+            return parseNumber(a) - parseNumber(b);
+          }
+          if (type === 'date') {
+            return parseDate(a) - parseDate(b);
+          }
+          return a.localeCompare(b, 'fr', { numeric: true, sensitivity: 'base' });
+        }
+
+        function resetHeaderState(headers) {
+          headers.forEach((header) => {
+            header.classList.remove('sort-asc', 'sort-desc');
+            header.dataset.sortDirection = '';
+            const indicator = header.querySelector('.sort-indicator');
+            if (indicator) {
+              indicator.textContent = '⇅';
+            }
+          });
+        }
+
+        function sortTableByColumn(table, header, columnIndex) {
+          const tbody = table.tBodies[0];
+          if (!tbody) {
+            return;
+          }
+          const rows = Array.from(tbody.rows);
+          const headers = Array.from(table.tHead ? table.tHead.querySelectorAll('th.sortable-col') : []);
+          if (!rows.length) {
+            return;
+          }
+
+          const type = detectSortType(rows, columnIndex);
+          const currentDirection = header.dataset.sortDirection === 'asc' ? 'asc' : header.dataset.sortDirection === 'desc' ? 'desc' : '';
+          const nextDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+
+          rows.sort((rowA, rowB) => {
+            const valueA = getCellValue(rowA, columnIndex);
+            const valueB = getCellValue(rowB, columnIndex);
+            const result = compareValues(valueA, valueB, type);
+            return nextDirection === 'asc' ? result : -result;
+          });
+
+          resetHeaderState(headers);
+          header.dataset.sortDirection = nextDirection;
+          header.classList.add(nextDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+          const indicator = header.querySelector('.sort-indicator');
+          if (indicator) {
+            indicator.textContent = nextDirection === 'asc' ? '▲' : '▼';
+          }
+
+          rows.forEach((row) => tbody.appendChild(row));
+        }
+
+        function makeTableSortable(table) {
+          if (!table.tHead || !table.tBodies.length || table.dataset.disableSort === '1') {
+            return;
+          }
+          table.classList.add('table-sortable');
+
+          const headerCells = Array.from(table.tHead.querySelectorAll('th'));
+          headerCells.forEach((header, index) => {
+            header.classList.add('sortable-col');
+            header.dataset.sortDirection = '';
+            header.setAttribute('tabindex', '0');
+            header.setAttribute('role', 'button');
+            header.setAttribute('aria-label', `Trier la colonne ${header.textContent.trim()}`);
+
+            if (!header.querySelector('.sort-indicator')) {
+              const indicator = document.createElement('span');
+              indicator.className = 'sort-indicator';
+              indicator.textContent = '⇅';
+              header.appendChild(indicator);
+            }
+
+            header.addEventListener('click', () => sortTableByColumn(table, header, index));
+            header.addEventListener('keydown', (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                sortTableByColumn(table, header, index);
+              }
+            });
+          });
+        }
+
+        document.querySelectorAll('table').forEach(makeTableSortable);
+      })();
+    </script>
   </body>
 </html>

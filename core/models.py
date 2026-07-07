@@ -972,6 +972,14 @@ class LigneEcriture(models.Model):
             models.Index(fields=['compte']),
         ]
 
+    def save(self, *args, **kwargs):
+        # Évite toute violation NOT NULL si un champ vide arrive depuis un formulaire dynamique.
+        if self.debit is None:
+            self.debit = Decimal('0')
+        if self.credit is None:
+            self.credit = Decimal('0')
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.ecriture.numero_ecriture or self.ecriture.reference} - {self.compte.numero_compte}"
 

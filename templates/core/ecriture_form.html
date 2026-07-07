@@ -13,12 +13,12 @@
           </p>
         </div>
         <div class="standalone-tools">
-          <a href="{% url 'ecriture_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
+          <a href="{% url 'ecriture_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% if request.GET.journal %}&journal={{ request.GET.journal }}{% endif %}{% endif %}" class="btn btn-outline-secondary">Retour liste</a>
         </div>
       </div>
 
       <div class="form-shell">
-        <form method="post">
+        <form method="post" novalidate id="ecriture-form">
           {% csrf_token %}
           {% if form.non_field_errors %}
             <div class="alert alert-danger">{{ form.non_field_errors }}</div>
@@ -98,19 +98,19 @@
               <div class="col-md-3">
                 <div class="border rounded p-2 bg-light">
                   <div class="small text-muted">Total débit</div>
-                  <div class="fw-semibold" id="total-debit-value">0.00</div>
+                  <div class="fw-semibold" id="total-debit-value">0</div>
                 </div>
               </div>
               <div class="col-md-3">
                 <div class="border rounded p-2 bg-light">
                   <div class="small text-muted">Total crédit</div>
-                  <div class="fw-semibold" id="total-credit-value">0.00</div>
+                  <div class="fw-semibold" id="total-credit-value">0</div>
                 </div>
               </div>
               <div class="col-md-3">
                 <div class="border rounded p-2 bg-light">
                   <div class="small text-muted">Écart</div>
-                  <div class="fw-semibold" id="total-ecart-value">0.00</div>
+                  <div class="fw-semibold" id="total-ecart-value">0</div>
                 </div>
               </div>
               <div class="col-md-3 d-flex align-items-stretch">
@@ -126,7 +126,7 @@
               <div class="alert alert-danger">{{ line_formset.non_form_errors }}</div>
             {% endif %}
             <div class="table-responsive">
-              <table class="table table-bordered table-sm align-middle" id="lignes-ecriture-table">
+              <table class="table table-bordered table-sm align-middle" id="lignes-ecriture-table" data-disable-sort="1">
                 <thead>
                   <tr>
                     <th style="min-width: 220px;">Compte</th>
@@ -137,7 +137,7 @@
                 </thead>
                 <tbody id="lignes-ecriture-body">
                   {% for line_form in line_formset %}
-                    <tr class="line-row">
+                    <tr class="line-row{% if line_form.DELETE.value %} d-none{% endif %}">
                       <td>
                         {{ line_form.compte }}
                         {% if line_form.compte.errors %}<div class="invalid-feedback d-block">{{ line_form.compte.errors }}</div>{% endif %}
@@ -151,11 +151,8 @@
                         {% if line_form.credit.errors %}<div class="invalid-feedback d-block">{{ line_form.credit.errors }}</div>{% endif %}
                       </td>
                       <td class="text-center">
-                        {% if line_form.instance.pk %}
-                          {{ line_form.DELETE }}
-                        {% else %}
-                          <button type="button" class="btn btn-sm btn-outline-danger remove-line-btn">Suppr.</button>
-                        {% endif %}
+                        {% if line_form.instance.pk %}<span class="d-none row-delete-field">{{ line_form.DELETE }}</span>{% endif %}
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-line-btn">Suppr.</button>
                         {{ line_form.id }}
                         {% if line_form.non_field_errors %}<div class="invalid-feedback d-block">{{ line_form.non_field_errors }}</div>{% endif %}
                       </td>
@@ -179,8 +176,8 @@
           {% endif %}
 
           <div class="mt-4">
-            <button type="submit" id="save-ecriture-btn" class="btn btn-success">Enregistrer</button>
-            <a href="{% url 'ecriture_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
+            <button type="button" id="save-ecriture-btn" class="btn btn-success">Enregistrer</button>
+            <a href="{% url 'ecriture_list' %}{% if request.GET.standalone == '1' or request.GET.embed == '1' %}?{% if request.GET.standalone == '1' %}standalone=1{% endif %}{% if request.GET.embed == '1' %}{% if request.GET.standalone == '1' %}&{% endif %}embed=1{% endif %}{% if request.GET.from_comptabilite == '1' %}&from_comptabilite=1{% endif %}{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}{% if request.GET.journal %}&journal={{ request.GET.journal }}{% endif %}{% endif %}" class="btn btn-secondary ms-2">Annuler</a>
           </div>
         </form>
       </div>
@@ -274,8 +271,10 @@
         const totalFormsInput = document.getElementById('id_lignes-TOTAL_FORMS');
         const template = document.getElementById('empty-line-template');
         const emptyPrefix = '__prefix__';
+        const enforceBalanceForSave = {% if is_create %}true{% else %}false{% endif %};
+        const formElement = document.getElementById('ecriture-form');
 
-        if (!addBtn || !body || !totalFormsInput || !template) {
+        if (!formElement || !addBtn || !body || !totalFormsInput || !template) {
           return;
         }
 
@@ -301,7 +300,13 @@
             btn.addEventListener('click', function () {
               const row = btn.closest('.line-row');
               if (row) {
-                row.remove();
+                const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+                if (deleteInput) {
+                  deleteInput.checked = true;
+                  row.classList.add('d-none');
+                } else {
+                  row.remove();
+                }
                 recomputeTotals();
               }
             });
@@ -312,7 +317,7 @@
           scope.querySelectorAll('input[name$="-debit"], input[name$="-credit"]').forEach((input) => {
             input.classList.add('text-end');
             if (!input.placeholder) {
-              input.placeholder = '0,00';
+              input.placeholder = '0';
             }
           });
         }
@@ -321,16 +326,20 @@
           if (!input) {
             return 0;
           }
-          const normalized = (input.value || '').replace(',', '.').trim();
+          const normalized = (input.value || '')
+            .replace(/\s|\u00A0/g, '')
+            .replace(',', '.')
+            .trim();
           const value = Number.parseFloat(normalized);
           return Number.isFinite(value) ? value : 0;
         }
 
         function formatAmount(value) {
-          return value.toLocaleString('fr-FR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
+          const rounded = Math.round(value || 0);
+          if (rounded === 0) {
+            return '';
+          }
+          return rounded.toLocaleString('fr-FR');
         }
 
         function recomputeTotals() {
@@ -338,6 +347,10 @@
           let totalCredit = 0;
 
           body.querySelectorAll('.line-row').forEach((row) => {
+            const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (deleteInput && deleteInput.checked) {
+              return;
+            }
             const debitInput = row.querySelector('input[name$="-debit"]');
             const creditInput = row.querySelector('input[name$="-credit"]');
             totalDebit += readAmount(debitInput);
@@ -375,10 +388,10 @@
           }
 
           if (saveBtn) {
-            saveBtn.disabled = !isBalanced;
-            saveBtn.title = isBalanced
-              ? ''
-              : 'Impossible d\'enregistrer: l\'écriture doit être équilibrée (débit = crédit).';
+            saveBtn.disabled = enforceBalanceForSave && !isBalanced;
+            saveBtn.title = (enforceBalanceForSave && !isBalanced)
+              ? 'Impossible d\'enregistrer: l\'écriture doit être équilibrée (débit = crédit).'
+              : '';
           }
         }
 
@@ -421,6 +434,21 @@
         applyLineInputStyling(body);
         syncSuggestedTiersCompte();
         recomputeTotals();
+
+        const saveBtn = document.getElementById('save-ecriture-btn');
+        if (saveBtn && !saveBtn.dataset.boundSubmit) {
+          saveBtn.dataset.boundSubmit = '1';
+          saveBtn.addEventListener('click', function () {
+            if (saveBtn.disabled) {
+              return;
+            }
+            if (typeof formElement.requestSubmit === 'function') {
+              formElement.requestSubmit();
+            } else {
+              formElement.submit();
+            }
+          });
+        }
       })();
     </script>
   {% endif %}

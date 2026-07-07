@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+{% load number_format %}
+{% block content %}
+  <div class="standalone-page">
+    <div class="standalone-surface">
+      <div class="standalone-head">
+        <div>
+          <h2>Gestion des comptes généraux</h2>
+          <p class="text-muted mb-0">Comptes mouvementés avec totaux débit, crédit et solde.</p>
+        </div>
+      </div>
+
+      <div class="standalone-table-card" style="max-height: 600px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+        <div class="table-responsive" style="margin-bottom: 0;">
+          <table class="table table-striped table-hover align-middle mb-0">
+            <thead style="position: sticky; top: 0; background: #f8f9fa; z-index: 10;">
+              <tr>
+                <th>Compte</th>
+                <th>Intitulé</th>
+                <th class="text-end">Débit</th>
+                <th class="text-end">Crédit</th>
+                <th class="text-end">Solde</th>
+                <th style="width: 120px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for compte in comptes_mouvementes %}
+                <tr>
+                  <td>{{ compte.compte__numero_compte }}</td>
+                  <td>{{ compte.compte__nom_compte }}</td>
+                  <td class="text-end">{{ compte.total_debit|format_amount }}</td>
+                  <td class="text-end">{{ compte.total_credit|format_amount }}</td>
+                  <td class="text-end {% if compte.solde < 0 %}text-danger{% endif %}">{{ compte.solde|format_amount }}</td>
+                  <td class="text-end">
+                    <a href="{% url 'grand_livre_page' %}?standalone=1&embed=1&from_comptabilite=1{% if request.GET.societe %}&societe={{ request.GET.societe }}{% endif %}&compte_debut={{ compte.compte__numero_compte }}&compte_fin={{ compte.compte__numero_compte }}" class="btn btn-sm btn-outline-primary">Voir</a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="empty-state">Aucun compte mouvementé.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
